@@ -92,6 +92,99 @@ create index if not exists opportunities_deadline_idx  on public.opportunities (
 create index if not exists opportunities_featured_idx  on public.opportunities (is_featured);
 
 -- ----------------------------------------------------------------------------
+-- JOBS
+-- Fresher-focused remote roles from free, scraping-permitted sources (RemoteOK
+-- API, We Work Remotely RSS). Populated by jobs_pipeline.py with NO LLM calls —
+-- every field is parsed from structured data. Deduped on apply_url.
+-- ----------------------------------------------------------------------------
+create table if not exists public.jobs (
+  id          uuid primary key default gen_random_uuid(),
+  slug        text unique,                            -- stable id for detail/dedupe
+  title       text not null,                          -- role, e.g. "Junior Frontend Developer"
+  company     text,
+  location    text,                                   -- "Remote" | "Bengaluru, India"
+  country     text,                                   -- "India" | "Global"
+  is_remote   boolean not null default false,
+  is_fresher  boolean not null default false,         -- entry-level / <1yr friendly (heuristic)
+  experience  text,                                   -- "0-1 years" | "Fresher" | null
+  skills      text[] default '{}',                    -- ["react","python","aws"]
+  salary      text,                                   -- "$60k–$90k" | null
+  apply_url   text not null unique,                   -- canonical link; UNIQUE = dedupe key
+  source      text,                                   -- "RemoteOK" | "We Work Remotely"
+  tags        text[] default '{}',
+  description text,
+  posted_at   timestamptz,                            -- when the source listed it
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create index if not exists jobs_fresher_idx on public.jobs (is_fresher);
+create index if not exists jobs_remote_idx  on public.jobs (is_remote);
+create index if not exists jobs_country_idx on public.jobs (country);
+create index if not exists jobs_posted_idx  on public.jobs (posted_at desc);
+
+-- ----------------------------------------------------------------------------
+-- LEARNING RESOURCES
+-- Unified table for things you learn from: free courses, full-course videos,
+-- conference talks, and professional certifications. The `kind` column
+-- discriminates (like opportunities.kind). Populated LLM-free from Microsoft
+-- Learn (courses + certs), freeCodeCamp & conference YouTube RSS. Dedupe on url.
+-- ----------------------------------------------------------------------------
+create table if not exists public.learning_resources (
+  id              uuid primary key default gen_random_uuid(),
+  slug            text unique,                          -- stable id / dedupe
+  title           text not null,
+  kind            text not null,                        -- 'course'|'video'|'talk'|'certification'
+  provider        text,                                 -- "Microsoft Learn" | "freeCodeCamp" | "AWS"
+  url             text not null unique,                 -- canonical link; UNIQUE = dedupe key
+  description     text,
+  level           text,                                 -- "Beginner"|"Intermediate"|"Advanced"|null
+  topics          text[] default '{}',                  -- ["azure","ai","python"]
+  is_free         boolean not null default true,
+  has_certificate boolean not null default false,       -- does completing it grant a cert?
+  duration        text,                                 -- "2 hours" | null
+  image_url       text,                                 -- icon / video thumbnail
+  source          text,                                 -- pipeline source name
+  is_featured     boolean not null default false,       -- famous/curated → surfaced first
+  published_at    timestamptz,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+-- Added after initial deploy — safe to re-run.
+alter table public.learning_resources
+  add column if not exists is_featured boolean not null default false;
+
+create index if not exists learning_kind_idx     on public.learning_resources (kind);
+create index if not exists learning_provider_idx on public.learning_resources (provider);
+create index if not exists learning_featured_idx on public.learning_resources (is_featured);
+
+-- ----------------------------------------------------------------------------
+-- REPOS
+-- Trending / notable open-source repositories worth learning from or contributing
+-- to. Populated LLM-free from the GitHub Search API. Deduped on url.
+-- ----------------------------------------------------------------------------
+create table if not exists public.repos (
+  id                  uuid primary key default gen_random_uuid(),
+  slug                text unique,                      -- "owner/name"
+  name                text not null,
+  owner               text,
+  url                 text not null unique,             -- canonical link; UNIQUE = dedupe key
+  description         text,
+  language            text,                             -- primary language
+  stars               integer not null default 0,
+  topics              text[] default '{}',
+  is_good_first_issue boolean not null default false,   -- beginner-contributable?
+  source              text,
+  pushed_at           timestamptz,                      -- last activity
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now()
+);
+
+create index if not exists repos_stars_idx    on public.repos (stars desc);
+create index if not exists repos_language_idx on public.repos (language);
+
+-- ----------------------------------------------------------------------------
 -- Keep *.updated_at fresh on any change.
 -- ----------------------------------------------------------------------------
 create or replace function public.touch_updated_at()
@@ -112,15 +205,33 @@ create trigger opportunities_touch
   before update on public.opportunities
   for each row execute function public.touch_updated_at();
 
+drop trigger if exists jobs_touch on public.jobs;
+create trigger jobs_touch
+  before update on public.jobs
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists learning_touch on public.learning_resources;
+create trigger learning_touch
+  before update on public.learning_resources
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists repos_touch on public.repos;
+create trigger repos_touch
+  before update on public.repos
+  for each row execute function public.touch_updated_at();
+
 -- ----------------------------------------------------------------------------
 -- Row Level Security
 -- The website reads with the public anon key, so allow anonymous SELECT only.
 -- Writes happen exclusively from the Python job using the service_role key,
 -- which bypasses RLS — so we deliberately grant NO public write policy.
 -- ----------------------------------------------------------------------------
-alter table public.technologies  enable row level security;
-alter table public.updates       enable row level security;
-alter table public.opportunities enable row level security;
+alter table public.technologies       enable row level security;
+alter table public.updates            enable row level security;
+alter table public.opportunities      enable row level security;
+alter table public.jobs               enable row level security;
+alter table public.learning_resources enable row level security;
+alter table public.repos              enable row level security;
 
 drop policy if exists "public read technologies" on public.technologies;
 create policy "public read technologies"
@@ -135,6 +246,21 @@ create policy "public read updates"
 drop policy if exists "public read opportunities" on public.opportunities;
 create policy "public read opportunities"
   on public.opportunities for select
+  using (true);
+
+drop policy if exists "public read jobs" on public.jobs;
+create policy "public read jobs"
+  on public.jobs for select
+  using (true);
+
+drop policy if exists "public read learning" on public.learning_resources;
+create policy "public read learning"
+  on public.learning_resources for select
+  using (true);
+
+drop policy if exists "public read repos" on public.repos;
+create policy "public read repos"
+  on public.repos for select
   using (true);
 
 -- ----------------------------------------------------------------------------

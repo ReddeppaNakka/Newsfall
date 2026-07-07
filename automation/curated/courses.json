@@ -1,0 +1,222 @@
+[
+  {
+    "title": "Anthropic Academy — Build with Claude",
+    "kind": "course",
+    "provider": "Anthropic",
+    "url": "https://www.anthropic.com/learn",
+    "description": "Official Anthropic learning hub: courses and guides for building with Claude, prompt engineering, the API, and agentic apps — plus Claude skill credentials.",
+    "level": "Beginner",
+    "topics": ["claude", "ai", "llm", "prompt-engineering"],
+    "is_free": true,
+    "has_certificate": true
+  },
+  {
+    "title": "AWS Certified Solutions Architect – Associate",
+    "kind": "certification",
+    "provider": "Amazon Web Services",
+    "url": "https://aws.amazon.com/certification/certified-solutions-architect-associate/",
+    "description": "The industry-standard cloud architecture certification — design resilient, cost-optimized systems on AWS. One of the most recognized certs in tech.",
+    "level": "Associate",
+    "topics": ["aws", "cloud", "architecture"],
+    "is_free": false,
+    "has_certificate": true
+  },
+  {
+    "title": "AWS Certified Cloud Practitioner",
+    "kind": "certification",
+    "provider": "Amazon Web Services",
+    "url": "https://aws.amazon.com/certification/certified-cloud-practitioner/",
+    "description": "The best entry point to cloud — foundational AWS knowledge with no deep technical prerequisites. Ideal first certification for freshers.",
+    "level": "Foundational",
+    "topics": ["aws", "cloud", "beginner"],
+    "is_free": false,
+    "has_certificate": true
+  },
+  {
+    "title": "AWS Certified Machine Learning – Specialty",
+    "kind": "certification",
+    "provider": "Amazon Web Services",
+    "url": "https://aws.amazon.com/certification/certified-machine-learning-specialty/",
+    "description": "Validate the ability to build, train, tune and deploy ML models on AWS. A strong signal for aspiring ML engineers.",
+    "level": "Advanced",
+    "topics": ["aws", "machine-learning", "ai"],
+    "is_free": false,
+    "has_certificate": true
+  },
+  {
+    "title": "Google Cloud Professional Cloud Architect",
+    "kind": "certification",
+    "provider": "Google Cloud",
+    "url": "https://cloud.google.com/learn/certification/cloud-architect",
+    "description": "Design and manage robust, secure, scalable cloud architecture on Google Cloud — consistently rated among the highest-value IT certifications.",
+    "level": "Professional",
+    "topics": ["gcp", "cloud", "architecture"],
+    "is_free": false,
+    "has_certificate": true
+  },
+  {
+    "title": "Google Cloud Digital Leader",
+    "kind": "certification",
+    "provider": "Google Cloud",
+    "url": "https://cloud.google.com/learn/certification/cloud-digital-leader",
+    "description": "Foundational Google Cloud certification covering cloud concepts and Google Cloud products — approachable for beginners and non-engineers.",
+    "level": "Foundational",
+    "topics": ["gcp", "cloud", "beginner"],
+    "is_free": false,
+    "has_certificate": true
+  },
+  {
+    "title": "Google Data Analytics Professional Certificate",
+    "kind": "course",
+    "provider": "Google (Coursera)",
+    "url": "https://www.coursera.org/professional-certificates/google-data-analytics",
+    "description": "A career-launching, beginner-friendly path into data analytics — spreadsheets, SQL, R, and Tableau. Free to audit; certificate optional.",
+    "level": "Beginner",
+    "topics": ["data-analytics", "sql", "tableau"],
+    "is_free": true,
+    "has_certificate": true
+  },
+  {
+    "title": "Meta Front-End Developer Professional Certificate",
+    "kind": "course",
+    "provider": "Meta (Coursera)",
+    "url": "https://www.coursera.org/professional-certificates/meta-front-end-developer",
+    "description": "Meta's job-ready front-end program: HTML, CSS, JavaScript, React and version control. Free to audit; certificate optional.",
+    "level": "Beginner",
+    "topics": ["react", "javascript", "frontend"],
+    "is_free": true,
+    "has_certificate": true
+  },
+  {
+    "title": "Meta Back-End Developer Professional Certificate",
+    "kind": "course",
+    "provider": "Meta (Coursera)",
+    "url": "https://www.coursera.org/professional-certificates/meta-back-end-developer",
+    "description": "Meta's back-end program: Python, Django, APIs and databases — built to be job-ready. Free to audit; certificate optional.",
+    "level": "Beginner",
+    "topics": ["python", "django", "backend"],
+    "is_free": true,
+    "has_certificate": true
+  },
+  {
+    "title": "Machine Learning Specialization (Andrew Ng)",
+    "kind": "course",
+    "provider": "DeepLearning.AI (Coursera)",
+    "url": "https://www.coursera.org/specializations/machine-learning-introduction",
+    "description": "The classic, beginner-friendly introduction to modern machine learning by Andrew Ng — the most popular ML course in the world.",
+    "level": "Beginner",
+    "topics": ["machine-learning", "ai", "python"],
+    "is_free": true,
+    "has_certificate": true
+  },
+  {
+    "title": "Deep Learning Specialization (Andrew Ng)",
+    "kind": "course",
+    "provider": "DeepLearning.AI (Coursera)",
+    "url": "https://www.coursera.org/specializations/deep-learning",
+    "description": "Go from the fundamentals of neural networks to CNNs, sequence models and transformers. The definitive deep-learning course series.",
+    "level": "Intermediate",
+    "topics": ["deep-learning", "neural-networks", "ai"],
+    "is_free": true,
+    "has_certificate": true
+  },
+  {
+    "title": "CS50: Introduction to Computer Science (Harvard)",
+    "kind": "course",
+    "provider": "Harvard (edX)",
+    "url": "https://cs50.harvard.edu/x/",
+    "description": "Harvard's legendary, completely free introduction to computer science — C, Python, SQL, algorithms and web. A rite of passage for beginners.",
+    "level": "Beginner",
+    "topics": ["cs-fundamentals", "python", "algorithms"],
+    "is_free": true,
+    "has_certificate": true
+  },
+  {
+    "title": "Certified Kubernetes Administrator (CKA)",
+    "kind": "certification",
+    "provider": "Linux Foundation / CNCF",
+    "url": "https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/",
+    "description": "The hands-on, performance-based certification for running Kubernetes in production — highly valued for DevOps and platform roles.",
+    "level": "Intermediate",
+    "topics": ["kubernetes", "devops", "cloud-native"],
+    "is_free": false,
+    "has_certificate": true
+  },
+  {
+    "title": "HashiCorp Certified: Terraform Associate",
+    "kind": "certification",
+    "provider": "HashiCorp",
+    "url": "https://www.hashicorp.com/certification/terraform-associate",
+    "description": "Validate infrastructure-as-code skills with Terraform — a core DevOps/cloud skill across every major cloud.",
+    "level": "Associate",
+    "topics": ["terraform", "devops", "infrastructure"],
+    "is_free": false,
+    "has_certificate": true
+  },
+  {
+    "title": "TensorFlow Developer Certificate",
+    "kind": "certification",
+    "provider": "Google / TensorFlow",
+    "url": "https://www.tensorflow.org/certificate",
+    "description": "Demonstrate you can build and train deep-learning models with TensorFlow — a practical, project-based ML credential.",
+    "level": "Intermediate",
+    "topics": ["tensorflow", "deep-learning", "ai"],
+    "is_free": false,
+    "has_certificate": true
+  },
+  {
+    "title": "IBM Data Science Professional Certificate",
+    "kind": "course",
+    "provider": "IBM (Coursera)",
+    "url": "https://www.coursera.org/professional-certificates/ibm-data-science",
+    "description": "A hands-on path into data science — Python, SQL, data analysis, visualization and machine learning. Free to audit; certificate optional.",
+    "level": "Beginner",
+    "topics": ["data-science", "python", "sql"],
+    "is_free": true,
+    "has_certificate": true
+  },
+  {
+    "title": "GitHub Foundations Certification",
+    "kind": "certification",
+    "provider": "GitHub",
+    "url": "https://resources.github.com/learn/certifications/",
+    "description": "Official GitHub certification covering collaboration, repositories, and the fundamentals every developer uses daily.",
+    "level": "Foundational",
+    "topics": ["github", "git", "collaboration"],
+    "is_free": false,
+    "has_certificate": true
+  },
+  {
+    "title": "freeCodeCamp — Responsive Web Design Certification",
+    "kind": "certification",
+    "provider": "freeCodeCamp",
+    "url": "https://www.freecodecamp.org/learn/2022/responsive-web-design/",
+    "description": "A completely free, project-based certification in HTML and CSS — build real, responsive pages from scratch.",
+    "level": "Beginner",
+    "topics": ["html", "css", "frontend"],
+    "is_free": true,
+    "has_certificate": true
+  },
+  {
+    "title": "freeCodeCamp — JavaScript Algorithms and Data Structures",
+    "kind": "certification",
+    "provider": "freeCodeCamp",
+    "url": "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures-v8/",
+    "description": "Free, hands-on JavaScript certification covering fundamentals, algorithms and data structures — essential interview prep.",
+    "level": "Beginner",
+    "topics": ["javascript", "algorithms", "data-structures"],
+    "is_free": true,
+    "has_certificate": true
+  },
+  {
+    "title": "NVIDIA Deep Learning Institute (DLI)",
+    "kind": "course",
+    "provider": "NVIDIA",
+    "url": "https://www.nvidia.com/en-us/training/",
+    "description": "Hands-on, GPU-accelerated training in AI, deep learning, data science and accelerated computing — with DLI certificates of competency.",
+    "level": "Intermediate",
+    "topics": ["ai", "deep-learning", "gpu"],
+    "is_free": false,
+    "has_certificate": true
+  }
+]

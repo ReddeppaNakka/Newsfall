@@ -1,5 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
-import { mockTechnologies, mockUpdates, mockOpportunities } from "./mock-data";
+import {
+  mockTechnologies,
+  mockUpdates,
+  mockOpportunities,
+  mockJobs,
+  mockLearning,
+  mockRepos,
+} from "./mock-data";
 import type { Technology, Update } from "./types";
 
 /**
@@ -80,6 +87,49 @@ class MockQuery<T = unknown> implements PromiseLike<Result<T>> {
         if (!a.deadline) return 1;
         if (!b.deadline) return -1;
         return a.deadline.localeCompare(b.deadline);
+      });
+      if (this.limitN != null) rows = rows.slice(0, this.limitN);
+      if (this.isSingle) return rows[0] ?? null;
+      return rows;
+    }
+
+    if (this.table === "learning_resources") {
+      let rows = [...mockLearning];
+      for (const f of this.filters) {
+        if (f.col === "kind") rows = rows.filter((r) => r.kind === f.val);
+        if (f.col === "provider") rows = rows.filter((r) => r.provider === f.val);
+      }
+      if (this.limitN != null) rows = rows.slice(0, this.limitN);
+      if (this.isSingle) return rows[0] ?? null;
+      return rows;
+    }
+
+    if (this.table === "repos") {
+      let rows = [...mockRepos];
+      for (const f of this.filters) {
+        if (f.col === "is_good_first_issue")
+          rows = rows.filter((r) => r.is_good_first_issue === f.val);
+        if (f.col === "language") rows = rows.filter((r) => r.language === f.val);
+      }
+      rows.sort((a, b) => b.stars - a.stars);
+      if (this.limitN != null) rows = rows.slice(0, this.limitN);
+      if (this.isSingle) return rows[0] ?? null;
+      return rows;
+    }
+
+    if (this.table === "jobs") {
+      let rows = [...mockJobs];
+      for (const f of this.filters) {
+        if (f.col === "is_fresher") rows = rows.filter((j) => j.is_fresher === f.val);
+        if (f.col === "is_remote") rows = rows.filter((j) => j.is_remote === f.val);
+        if (f.col === "country") rows = rows.filter((j) => j.country === f.val);
+      }
+      // Fresher-friendly first, then most recently posted (nulls last).
+      rows.sort((a, b) => {
+        if (a.is_fresher !== b.is_fresher) return a.is_fresher ? -1 : 1;
+        if (!a.posted_at) return 1;
+        if (!b.posted_at) return -1;
+        return b.posted_at.localeCompare(a.posted_at);
       });
       if (this.limitN != null) rows = rows.slice(0, this.limitN);
       if (this.isSingle) return rows[0] ?? null;

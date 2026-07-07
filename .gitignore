@@ -3,6 +3,10 @@ web/node_modules/
 web/.next/
 web/out/
 web/.vercel/
+web/tsconfig.tsbuildinfo
+
+# Stray npm lockfile in the Python automation dir (not used)
+automation/package-lock.json
 
 # Env files (never commit secrets)
 **/.env

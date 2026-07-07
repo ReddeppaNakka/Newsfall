@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Technology, Opportunity } from "@/lib/types";
+import type { Technology, Opportunity, Job, LearningResource, Repo } from "@/lib/types";
 import Hero from "@/components/Hero";
 import Highlights from "@/components/Highlights";
 import TechExplorer from "@/components/TechExplorer";
 import HotTopicsFeed from "@/components/HotTopicsFeed";
 import OpportunityCard from "@/components/OpportunityCard";
+import JobCard from "@/components/JobCard";
+import LearningCard from "@/components/LearningCard";
+import RepoCard from "@/components/RepoCard";
 import TopicModal from "@/components/TopicModal";
 
 /**
@@ -60,6 +63,29 @@ export default async function HomePage() {
     .order("published_at", { ascending: false, nullsFirst: false })
     .limit(60);
 
+  // 6) Jobs preview — fresher-friendly first, then most recently posted.
+  const { data: jobsData } = await supabase
+    .from("jobs")
+    .select("*")
+    .order("is_fresher", { ascending: false })
+    .order("posted_at", { ascending: false, nullsFirst: false })
+    .limit(6);
+
+  // 7) Learning preview — famous curated ones first, then newest.
+  const { data: learningData } = await supabase
+    .from("learning_resources")
+    .select("*")
+    .order("is_featured", { ascending: false })
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .limit(6);
+
+  // 8) Repos preview — highest-starred trending repos.
+  const { data: reposData } = await supabase
+    .from("repos")
+    .select("*")
+    .order("stars", { ascending: false })
+    .limit(6);
+
   const technologies = (techs ?? []) as Technology[];
   // Keep only currently-open opportunities: no deadline (evergreen) or deadline still
   // in the future. So an important listing stays visible right up until its last date.
@@ -68,6 +94,9 @@ export default async function HomePage() {
     (o) => !o.deadline || new Date(o.deadline).getTime() >= now,
   );
   const opportunities = openOpps.slice(0, 6);
+  const jobs = (jobsData ?? []) as Job[];
+  const learning = (learningData ?? []) as LearningResource[];
+  const repos = (reposData ?? []) as Repo[];
 
   // Important (importance >= 4) updates from the last 7 days, best first. This keeps big
   // releases pinned for the week instead of sinking under minor news.
@@ -112,6 +141,81 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {opportunities.map((o) => (
               <OpportunityCard key={o.id} opp={o} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Remote tech jobs — fresher-friendly first */}
+      {jobs.length > 0 && (
+        <section className="mx-auto max-w-6xl px-6 pb-24">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-glow-emerald" />
+              <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">
+                Remote Tech Jobs
+              </h2>
+            </div>
+            <Link
+              href="/jobs"
+              className="shrink-0 text-sm font-medium text-emerald-300 transition hover:text-emerald-200"
+            >
+              See all →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {jobs.map((j) => (
+              <JobCard key={j.id} job={j} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Learn & get certified — free courses, certifications, talks */}
+      {learning.length > 0 && (
+        <section className="mx-auto max-w-6xl px-6 pb-24">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-glow-cyan" />
+              <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">
+                Learn & Get Certified
+              </h2>
+            </div>
+            <Link
+              href="/learn"
+              className="shrink-0 text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
+            >
+              See all →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {learning.map((r) => (
+              <LearningCard key={r.id} item={r} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Trending open-source repos */}
+      {repos.length > 0 && (
+        <section className="mx-auto max-w-6xl px-6 pb-24">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="h-2 w-2 rounded-full bg-violet-400 shadow-glow-violet" />
+              <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">
+                Trending Repositories
+              </h2>
+            </div>
+            <Link
+              href="/repos"
+              className="shrink-0 text-sm font-medium text-violet-300 transition hover:text-violet-200"
+            >
+              See all →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {repos.map((r) => (
+              <RepoCard key={r.id} repo={r} />
             ))}
           </div>
         </section>

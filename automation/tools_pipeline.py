@@ -43,6 +43,9 @@ class Targeted:
 
 
 # Precise, always-tracked sources.
+# An EMPTY keywords tuple means "this is the tool's OWN official blog — every item is
+# about it, so accept them all" (no keyword filter needed). A non-empty tuple keeps only
+# items whose title mentions one of the keywords (for multi-topic company blogs).
 TARGETED_SOURCES: list[Targeted] = [
     Targeted("https://blog.google/technology/google-deepmind/rss/", "gemini-pro",
              ("gemini", "deepmind")),
@@ -50,6 +53,14 @@ TARGETED_SOURCES: list[Targeted] = [
     Targeted("https://www.anthropic.com/rss.xml", "claude-opus", ("claude", "anthropic", "opus")),
     Targeted("https://blog.python.org/feeds/posts/default", "python", ("python",)),
     Targeted("https://tailwindcss.com/feeds/feed.xml", "tailwindcss", ("tailwind",)),
+    # Official single-project blogs — accept every item (keywords empty).
+    Targeted("https://react.dev/rss.xml", "react", ()),
+    Targeted("https://nodejs.org/en/feed/blog.xml", "nodejs", ()),
+    Targeted("https://devblogs.microsoft.com/typescript/feed/", "typescript", ()),
+    Targeted("https://blog.rust-lang.org/feed.xml", "rust", ()),
+    Targeted("https://go.dev/blog/feed.atom", "go", ()),
+    Targeted("https://code.visualstudio.com/feed.xml", "vscode", ()),
+    Targeted("https://nextjs.org/feed.xml", "nextjs", ()),
 ]
 
 TECH_DEFAULTS: dict[str, dict] = {
@@ -58,19 +69,34 @@ TECH_DEFAULTS: dict[str, dict] = {
     "claude-opus": {"name": "Claude Opus", "category": "Frontier Models", "accent_color": "violet"},
     "python": {"name": "Python", "category": "Languages", "accent_color": "emerald"},
     "tailwindcss": {"name": "Tailwind CSS", "category": "Frameworks", "accent_color": "cyan"},
+    "react": {"name": "React", "category": "Frameworks", "accent_color": "cyan"},
+    "nodejs": {"name": "Node.js", "category": "Frameworks", "accent_color": "emerald"},
+    "typescript": {"name": "TypeScript", "category": "Languages", "accent_color": "cyan"},
+    "rust": {"name": "Rust", "category": "Languages", "accent_color": "violet"},
+    "go": {"name": "Go", "category": "Languages", "accent_color": "cyan"},
+    "vscode": {"name": "VS Code", "category": "Developer Tools", "accent_color": "violet"},
+    "nextjs": {"name": "Next.js", "category": "Frameworks", "accent_color": "violet"},
 }
 
-# Broad feeds — anything genuinely new gets discovered & auto-created.
+# Broad feeds — anything genuinely new gets discovered & auto-created. All free RSS,
+# no API key. Keep this list high-signal: every item here costs one LLM classify call.
 DISCOVERY_FEEDS: list[str] = [
     "https://huggingface.co/blog/feed.xml",
     "https://techcrunch.com/category/artificial-intelligence/feed/",
     "https://venturebeat.com/category/ai/feed/",
     "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
     "https://hnrss.org/frontpage?points=150",  # only high-signal HN items
+    "https://dev.to/feed",                      # developer community — new tools/libraries
+    "https://feed.infoq.com/",                  # architecture, languages, frameworks
+    "https://github.blog/feed/",                # GitHub product + open-source news
 ]
 
 ITEMS_PER_TARGETED = 10
-ITEMS_PER_DISCOVERY = 12
+ITEMS_PER_DISCOVERY = 10
+# Backstop for the free LLM tier: never make more than this many discovery-classify
+# calls in a single run. Whatever's left is picked up by the next daily run. Combined
+# with skip-already-seen (see run()), a typical day makes far fewer calls than this.
+MAX_DISCOVERY_CLASSIFICATIONS = 45
 
 
 # --------------------------------------------------------------------------- #
@@ -114,10 +140,18 @@ def classify_discovery(title: str, content: str) -> dict | None:
     funding gossip, etc.) or the LLM is unavailable.
     """
     data = llm_json(
-        "You curate a tracker of programming languages, frameworks, AI models, and "
-        "developer tools. Decide if the item below announces a NEW or UPDATED such "
-        "tool/model that a software engineer would want to try. Ignore pure funding "
-        "news, opinion, drama, and non-technical items.\n\n"
+        "You curate a HIGH-QUALITY tracker of programming languages, frameworks, AI "
+        "models, and mainstream developer tools that a software engineer or CS student "
+        "would realistically learn or adopt. Decide if the item announces a NEW or "
+        "UPDATED such tool/model.\n\n"
+        "Set relevant=TRUE only for a real, named, adoptable product: a programming "
+        "language, framework/library, AI model, database, cloud/dev platform, or widely "
+        "useful developer tool.\n"
+        "Set relevant=FALSE for anything else, including: datasets, benchmarks, research "
+        "papers, tutorials/how-tos, personal side-projects or portfolios, one-off demos, "
+        "hardware/retro-computing hacks, consumer apps or gadgets (e.g. voice assistants, "
+        "maps, games), company/funding/business news, opinion, and drama. When unsure, "
+        "set relevant=FALSE — a smaller, cleaner list is the goal.\n\n"
         "Return STRICT JSON:\n"
         '{"relevant": true|false,\n'
         ' "name": "<official tool/model name, e.g. \'GLM-4.6\' or \'Bun\'>",\n'
@@ -206,28 +240,47 @@ def _published(entry) -> str | None:
 # --------------------------------------------------------------------------- #
 def run(db: Client) -> int:
     total = 0
+    # Preload every source_url we've already stored so we only spend an LLM call on
+    # genuinely NEW items. This is what lets us add many feeds without exhausting the
+    # free LLM tier — repeat items across daily runs are skipped for free.
+    # Trade-off: we no longer re-score importance on already-seen items, so an old
+    # item keeps its first score. That's fine: highlights use a rolling 7-day window.
+    seen: set[str] = {
+        r["source_url"] for r in db.table("updates").select("source_url").execute().data
+    }
+
     print("\n=== TOOLS: targeted feeds ===")
     for src in TARGETED_SOURCES:
         print(f"→ {src.feed_url}")
-        feed = feedparser.parse(src.feed_url)
+        try:
+            feed = feedparser.parse(src.feed_url)
+        except Exception as exc:  # noqa: BLE001
+            print(f"  ! feed error: {exc}")
+            continue
         tech_id = get_or_create_technology(db, src.tech_slug, TECH_DEFAULTS.get(src.tech_slug, {}))
         if not tech_id:
             continue
         for entry in feed.entries[:ITEMS_PER_TARGETED]:
             title = entry.get("title", "")
-            if not any(k in title.lower() for k in src.keywords):
+            # Empty keywords = the tool's own blog, accept all; else require a match.
+            if src.keywords and not any(k in title.lower() for k in src.keywords):
                 continue
             link = entry.get("link")
-            if not link:
+            if not link or link in seen:
                 continue
             content = entry.get("summary", "") or entry.get("description", "")
             fields = structure_known(title, content)
             insert_update(db, tech_id, fields, link, _published(entry))
+            seen.add(link)
             print(f"  • {fields['title']}")
             total += 1
 
     print("\n=== TOOLS: discovery feeds (auto-detect new tools) ===")
+    classifications = 0
     for url in DISCOVERY_FEEDS:
+        if classifications >= MAX_DISCOVERY_CLASSIFICATIONS:
+            print("  … discovery LLM budget reached — remaining feeds picked up next run")
+            break
         print(f"→ {url}")
         try:
             feed = feedparser.parse(url)
@@ -235,11 +288,14 @@ def run(db: Client) -> int:
             print(f"  ! feed error: {exc}")
             continue
         for entry in feed.entries[:ITEMS_PER_DISCOVERY]:
+            if classifications >= MAX_DISCOVERY_CLASSIFICATIONS:
+                break
             title = entry.get("title", "")
             link = entry.get("link")
-            if not title or not link:
+            if not title or not link or link in seen:
                 continue
             content = entry.get("summary", "") or entry.get("description", "")
+            classifications += 1
             info = classify_discovery(title, content)
             if not info:
                 continue
@@ -257,6 +313,7 @@ def run(db: Client) -> int:
             if not tech_id:
                 continue
             insert_update(db, tech_id, info, link, _published(entry))
+            seen.add(link)
             print(f"  • [{info['slug']}] {info['title']}")
             total += 1
 

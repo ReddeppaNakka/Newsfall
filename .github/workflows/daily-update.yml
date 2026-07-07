@@ -32,4 +32,6 @@ jobs:
           # Optional overrides — defaults in scraper.py target Groq's free tier.
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
           LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          # Auto-provided by GitHub — raises the GitHub Search API rate limit for repos_pipeline.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scraper.py
