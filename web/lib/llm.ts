@@ -9,7 +9,10 @@ const LLM_API_KEY = process.env.LLM_API_KEY;
 const LLM_BASE_URL = process.env.LLM_BASE_URL || "https://api.groq.com/openai/v1";
 const LLM_MODEL = process.env.LLM_MODEL || "llama-3.3-70b-versatile";
 
-export async function llmJson(prompt: string): Promise<Record<string, unknown> | null> {
+export async function llmJson(
+  prompt: string,
+  opts?: { maxTokens?: number; timeoutMs?: number },
+): Promise<Record<string, unknown> | null> {
   if (!LLM_API_KEY) return null; // no key configured (e.g. preview mode) → caller falls back
 
   // Retry on rate limits (429) — free LLM tiers cap requests/minute. Keep backoff short
@@ -25,11 +28,11 @@ export async function llmJson(prompt: string): Promise<Record<string, unknown> |
         body: JSON.stringify({
           model: LLM_MODEL,
           temperature: 0.3,
-          max_tokens: 800,
+          max_tokens: opts?.maxTokens ?? 800,
           response_format: { type: "json_object" },
           messages: [{ role: "user", content: prompt }],
         }),
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(opts?.timeoutMs ?? 15000),
       });
 
       if (resp.status === 429) {

@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { AccentColor, Technology, Update } from "@/lib/types";
 import type { Brief } from "@/lib/brief";
 import { logoFor } from "@/lib/logo";
+import ImageGallery from "./ImageGallery";
 
 /**
  * Detail popup. Opens whenever the URL has ?topic=<slug>. Two-phase load:
@@ -170,6 +172,13 @@ export default function TopicModal() {
               </p>
             )}
 
+            {/* Relevant images (web-sourced) — click to enlarge in an in-app lightbox */}
+            {brief && brief.images.length > 0 && (
+              <div className="mt-5">
+                <ImageGallery images={brief.images} alt={tech.name} variant="strip" />
+              </div>
+            )}
+
             {/* Brief: loading → sections → fallback */}
             {brief ? (
               <>
@@ -269,6 +278,30 @@ export default function TopicModal() {
                 Visit official site ↗
               </a>
             )}
+
+            {/* Know more — final call-to-action → full deep-dive page */}
+            <Link
+              href={`/topic/${tech.slug}`}
+              className={`group/km mt-7 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r ${accent.grad} px-5 py-3.5 ring-1 ${accent.ring} transition hover:brightness-125`}
+            >
+              <span className="flex items-center gap-2">
+                <span aria-hidden className="text-lg">✨</span>
+                <span className="text-sm font-semibold text-white">
+                  Know more — open the full deep dive
+                </span>
+              </span>
+              <svg
+                className="h-5 w-5 text-white transition-transform group-hover/km:translate-x-1"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </Link>
           </div>
         )}
       </div>
