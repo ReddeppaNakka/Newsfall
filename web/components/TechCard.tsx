@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { AccentColor, Technology } from "@/lib/types";
 import { logoFor } from "@/lib/logo";
+import Logo from "./Logo";
 
 /**
  * Premium interactive card.
@@ -39,7 +40,7 @@ const ACCENT: Record<
 
 export default function TechCard({ tech }: { tech: Technology }) {
   const accent = ACCENT[tech.accent_color] ?? ACCENT.violet;
-  const logo = logoFor(tech.image_url, tech.homepage_url);
+  const logo = logoFor(tech.image_url, tech.homepage_url, tech.name);
 
   return (
     <Link
@@ -51,19 +52,11 @@ export default function TechCard({ tech }: { tech: Technology }) {
       <div
         className={`relative flex h-40 w-full items-center justify-center overflow-hidden bg-gradient-to-br ${accent.grad}`}
       >
-        {logo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={logo}
-            alt={tech.name}
-            className="h-16 w-16 rounded-2xl object-contain transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-          />
-        ) : (
-          <span className="text-6xl font-bold text-white/90 transition-transform duration-500 group-hover:scale-110">
-            {tech.name.charAt(0).toUpperCase()}
-          </span>
-        )}
+        <Logo
+          src={logo}
+          name={tech.name}
+          className="h-16 w-16 rounded-2xl object-contain transition-transform duration-500 group-hover:scale-110"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/20 to-transparent" />
         {/* Version badge */}
         {tech.current_version && (

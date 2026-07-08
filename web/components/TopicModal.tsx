@@ -116,7 +116,7 @@ export default function TopicModal() {
 
   const tech = basics?.technology;
   const accent = ACCENT[tech?.accent_color ?? "violet"] ?? ACCENT.violet;
-  const logo = tech ? logoFor(tech.image_url, tech.homepage_url) : null;
+  const logo = tech ? logoFor(tech.image_url, tech.homepage_url, tech.name) : null;
 
   return (
     <div

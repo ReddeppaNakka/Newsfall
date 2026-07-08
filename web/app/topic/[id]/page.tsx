@@ -74,7 +74,7 @@ export default async function TopicPage({ params }: Params) {
   const list = (updates ?? []) as Update[];
   const brief = await getDeepBrief(tech, list); // richer, web-grounded, cached 24h (with images)
   const accent = ACCENT[tech.accent_color] ?? ACCENT.violet;
-  const logo = logoFor(tech.image_url, tech.homepage_url);
+  const logo = logoFor(tech.image_url, tech.homepage_url, tech.name);
 
   return (
     <main className="mx-auto min-h-screen max-w-4xl px-6 py-12">
