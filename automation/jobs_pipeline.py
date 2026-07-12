@@ -30,6 +30,7 @@ from common import USER_AGENT
 
 REMOTEOK_MAX = 40
 WWR_MAX_PER_FEED = 20
+UNSTOP_MAX_PER_TYPE = 30
 
 # We Work Remotely category feeds most relevant to freshers/devs.
 WWR_FEEDS = [
@@ -43,14 +44,15 @@ WWR_FEEDS = [
 # A role qualifies if its TITLE names a tech role, or its tags include a strong
 # tech signal (a language/framework/stack).
 TECH_TITLE_HINTS = (
-    "developer", "engineer", "programmer", "software", "frontend", "front-end",
-    "front end", "backend", "back-end", "back end", "full stack", "full-stack",
-    "fullstack", "web dev", "mobile dev", "ios", "android", "devops", "sre",
-    "site reliability", "data scientist", "data analyst", "data engineer",
-    "machine learning", "ai engineer", "designer", "ui/ux", "cloud", "database",
-    "platform engineer", "qa engineer", "quality assurance", "security engineer",
-    "python", "javascript", "typescript", "react", "node", "golang", "rust",
-    "php ", "ruby", "kotlin", "swift",
+    "developer", "develop", "engineer", "programmer", "programming", "coding", "software",
+    "frontend", "front-end", "front end", "backend", "back-end", "back end", "full stack",
+    "full-stack", "fullstack", "web dev", "web develop", "website", "app develop", "mobile",
+    "ios", "android", "devops", "sre", "site reliability", "data scientist", "data analyst",
+    "data engineer", "data science", "data analytics", "machine learning",
+    "artificial intelligence", "ai engineer", " ai ", " ml ", "designer", "ui/ux", "ui / ux",
+    " ux ", " ui ", "cloud", "database", "platform engineer", "qa", "quality assurance",
+    "sdet", "testing", "security engineer", "cyber", "blockchain", "python", "javascript",
+    "typescript", "react", "node", "golang", "rust", "php ", "ruby", "kotlin", "swift", ".net",
 )
 STRONG_TECH_TAGS = {
     "python", "javascript", "typescript", "react", "node", "nodejs", "golang", "go",
@@ -59,17 +61,21 @@ STRONG_TECH_TAGS = {
     "data science", "postgres", "sql", "graphql", "android", "ios", "swift", "kotlin",
 }
 
-# Non-tech roles that must be rejected even if a stray tech tag/word appears. RemoteOK
-# especially tags business/sales/marketing jobs with tech tags, so we gate on the TITLE:
-# a clear non-tech title always loses, and we do NOT trust tags to admit a role.
+# Non-tech roles that must be rejected even if a stray tech word appears. We gate on the
+# TITLE: a clear non-tech title always loses (this runs BEFORE the tech check). Covers the
+# common Unstop/RemoteOK non-tech domains (sales, marketing, PR, HR, ops, finance, and
+# non-software "engineering" like civil/mechanical).
 NON_TECH_HINTS = (
     "business development", "account executive", "account strategist", "account manager",
-    "sales ", "marketing", "martech", "gtm ", "growth manager", "recruiter", "talent ",
-    "customer success", "customer support", "project manager", "product manager",
-    "operations manager", "finance", "accountant", "bookkeep", "human resources", " hr ",
-    "executive assistant", "administrative", "office manager", "content writer",
-    "copywriter", "community manager", "social media", "seo ", "paralegal",
-    "virtual assistant", "data entry", "file clerk",
+    "sales ", "marketing", "martech", "gtm ", "growth manager", "recruiter", "recruitment",
+    "talent ", "customer success", "customer support", "project manager", "product manager",
+    "operations", "finance", "financial", "accountant", "accounting", "bookkeep",
+    "human resource", " hr ", "executive assistant", "administrative", "office manager",
+    "content writer", "content writ", "copywriter", "community manager", "social media",
+    "seo ", "paralegal", "legal ", "virtual assistant", "data entry", "file clerk",
+    "public relation", "graphic design", "interior design", "fashion", "video edit",
+    "photograph", "civil engineer", "mechanical engineer", "electrical engineer",
+    "chemical engineer", "computer aided design", "teaching", "tutor",
 )
 
 
@@ -226,12 +232,79 @@ def _wwr(db: Client) -> int:
     return n
 
 
+def _unstop(db: Client) -> int:
+    """Unstop (India) jobs + internships — the fresher-focused India source. LLM-free.
+
+    Unstop is a student/fresher platform, so we mark everything is_fresher and country
+    India. We keep only technical roles (the tech-title filter drops the many
+    sales/marketing/PR listings). Best-effort: non-fatal if the API shape changes.
+    """
+    n = 0
+    for opp_type in ("jobs", "internships"):
+        try:
+            resp = requests.get(
+                "https://unstop.com/api/public/opportunity/search-result",
+                params={"opportunity": opp_type, "per_page": UNSTOP_MAX_PER_TYPE, "oppstatus": "open"},
+                headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            listings = (resp.json().get("data") or {}).get("data") or []
+        except Exception as exc:  # noqa: BLE001 — one bad call never aborts the run
+            print(f"  ! unstop {opp_type} failed: {exc}")
+            continue
+
+        for it in listings[:UNSTOP_MAX_PER_TYPE]:
+            title = it.get("title")
+            raw_url = it.get("seo_url") or it.get("public_url")
+            if not title or not raw_url:
+                continue
+            if not _is_tech(str(title)):
+                continue  # drop sales / marketing / PR / non-software listings
+            url = str(raw_url)
+            if not url.startswith("http"):
+                url = f"https://unstop.com/{url.lstrip('/')}"
+
+            skills = []
+            rs = it.get("required_skills")
+            if isinstance(rs, list):
+                for s in rs[:8]:
+                    name = s.get("name") if isinstance(s, dict) else s
+                    if name:
+                        skills.append(str(name).lower())
+
+            region = str(it.get("region") or "").strip().lower()
+            is_remote = region in ("online", "remote", "")
+            _upsert(
+                db,
+                {
+                    "slug": None,
+                    "title": str(title)[:120],
+                    "company": (it.get("organisation") or {}).get("name"),
+                    "location": "Remote" if is_remote else str(it.get("region")).title(),
+                    "country": "India",
+                    "is_remote": is_remote,
+                    "is_fresher": True,  # Unstop's audience is students & freshers
+                    "experience": "Internship" if opp_type == "internships" else "Fresher / entry-level",
+                    "skills": skills,
+                    "salary": None,
+                    "apply_url": url,
+                    "source": "Unstop",
+                    "tags": ["india"],
+                    "description": None,
+                    "posted_at": None,
+                },
+            )
+            n += 1
+    return n
+
+
 # --------------------------------------------------------------------------- #
 # Entry point
 # --------------------------------------------------------------------------- #
 def run(db: Client) -> int:
     total = 0
-    for name, fn in (("remoteok", _remoteok), ("wwr", _wwr)):
+    for name, fn in (("remoteok", _remoteok), ("wwr", _wwr), ("unstop-india", _unstop)):
         try:
             count = fn(db)
             print(f"  {name}: upserted {count}")

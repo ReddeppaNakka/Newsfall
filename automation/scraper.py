@@ -43,6 +43,8 @@ def run() -> None:
     db = common.get_db()
 
     tools_n = tools_pipeline.run(db)
+    print("\n=== TOOLS: curated homepages (for real logos) ===")
+    tools_pipeline.apply_curated_homepages(db)
     opps_n = opportunities_pipeline.run(db)
     print("\n=== JOBS ===")
     jobs_n = jobs_pipeline.run(db)

@@ -17,13 +17,17 @@ Both write into the same technologies/updates tables, deduped by updates.source_
 
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import dataclass
+from pathlib import Path
 
 import feedparser
 
 from common import llm_json
 from supabase import Client
+
+HOMEPAGES_PATH = Path(__file__).parent / "curated" / "homepages.json"
 
 ALLOWED_ACCENTS = {"violet", "cyan", "emerald"}
 ALLOWED_CATEGORIES = {
@@ -233,6 +237,30 @@ def _published(entry) -> str | None:
     if getattr(entry, "published_parsed", None):
         return time.strftime("%Y-%m-%dT%H:%M:%SZ", entry.published_parsed)
     return None
+
+
+# --------------------------------------------------------------------------- #
+# Curated homepages — so cards can show a REAL logo (the frontend derives a logo
+# from homepage_url). LLM-guessed homepages proved unreliable (wrong companies,
+# hallucinated repos), so these are hand-verified. Applied authoritatively each run;
+# obscure tools with no entry keep a clean initials tile. Edit curated/homepages.json
+# to add more. (New tools discovered by the classifier still get a grounded homepage.)
+# --------------------------------------------------------------------------- #
+def apply_curated_homepages(db: Client) -> int:
+    try:
+        mapping = json.loads(HOMEPAGES_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        print(f"  ! could not read curated homepages: {exc}")
+        return 0
+    n = 0
+    for name, url in mapping.items():
+        if name.startswith("_") or not isinstance(url, str):
+            continue  # skip the _comment key
+        res = db.table("technologies").update({"homepage_url": url}).eq("name", name).execute()
+        if res.data:
+            n += len(res.data)
+    print(f"  applied {n} curated homepages")
+    return n
 
 
 # --------------------------------------------------------------------------- #
