@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Sidebar from "@/components/Sidebar";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -24,7 +25,8 @@ export default function RootLayout({
           <div className="absolute top-1/3 right-0 h-96 w-96 rounded-full bg-cyan-500/15 blur-[120px] animate-pulse-slow" />
           <div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-emerald-500/10 blur-[120px] animate-pulse-slow" />
         </div>
-        {children}
+        <Sidebar />
+        <div className="md:pl-60">{children}</div>
       </body>
     </html>
   );

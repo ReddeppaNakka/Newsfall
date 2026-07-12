@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { AccentColor, Technology, Update } from "@/lib/types";
+import Icon from "@/components/Icon";
 
 /**
  * "This week's highlights" — the important releases (importance >= 4) from the last
@@ -21,8 +22,8 @@ export default function Highlights({ items }: { items: Item[] }) {
   return (
     <section className="mx-auto max-w-6xl px-6 pb-4 pt-8">
       <div className="mb-6 flex items-center gap-3">
-        <span className="text-lg" aria-hidden>
-          🔥
+        <span className="text-zinc-100">
+          <Icon name="fire" className="h-5 w-5" />
         </span>
         <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">
           This week&apos;s highlights

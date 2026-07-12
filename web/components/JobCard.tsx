@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { AccentColor, Job } from "@/lib/types";
+import Icon from "@/components/Icon";
 
 /**
  * Premium job card — fresher-focused remote tech roles. Clicking opens an in-app
@@ -82,7 +83,7 @@ export default function JobCard({ job }: { job: Job }) {
           <span
             className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${accent.badge}`}
           >
-            <span aria-hidden>{job.is_fresher ? "🌱" : "💼"}</span>
+            <Icon name={job.is_fresher ? "sparkles" : "briefcase"} className="h-3.5 w-3.5" />
             {job.is_fresher ? "Fresher-friendly" : "Job"}
           </span>
           {posted && <span className="shrink-0 text-xs font-medium text-zinc-400">{posted}</span>}
@@ -108,15 +109,15 @@ export default function JobCard({ job }: { job: Job }) {
         )}
 
         <div className="mt-4 flex flex-wrap gap-2 text-xs">
-          <span className="rounded-md bg-white/5 px-2 py-0.5 text-zinc-300">
-            📍 {job.is_remote ? "Remote" : job.location || "—"}
+          <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-0.5 text-zinc-300">
+            <Icon name="pin" className="h-3 w-3" /> {job.is_remote ? "Remote" : job.location || "—"}
             {job.country && job.country !== "Global" ? ` · ${job.country}` : ""}
           </span>
           {job.salary && (
-            <span className="rounded-md bg-white/5 px-2 py-0.5 text-amber-200/90">💰 {job.salary}</span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-0.5 text-amber-200/90"><Icon name="money" className="h-3 w-3" /> {job.salary}</span>
           )}
           {job.experience && (
-            <span className="rounded-md bg-white/5 px-2 py-0.5 text-zinc-400">🧭 {job.experience}</span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-0.5 text-zinc-400"><Icon name="clock" className="h-3 w-3" /> {job.experience}</span>
           )}
         </div>
 
@@ -164,7 +165,7 @@ export default function JobCard({ job }: { job: Job }) {
             <span
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${accent.badge}`}
             >
-              <span aria-hidden>{job.is_fresher ? "🌱" : "💼"}</span>
+              <Icon name={job.is_fresher ? "sparkles" : "briefcase"} className="h-3.5 w-3.5" />
               {job.is_fresher ? "Fresher-friendly" : "Job"}
             </span>
             <h2 className="mt-3 pr-8 text-2xl font-bold text-white">{job.title}</h2>

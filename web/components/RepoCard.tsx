@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Repo } from "@/lib/types";
+import Icon from "@/components/Icon";
 
 /**
  * Premium repo card — trending / notable open-source projects. Clicking opens an
@@ -45,12 +46,12 @@ export default function RepoCard({ repo }: { repo: Repo }) {
       >
         <div className="flex items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-200/90">
-            <span aria-hidden>⭐</span>
+            <Icon name="star" className="h-3.5 w-3.5" />
             {stars(repo.stars)}
           </span>
           {gfi && (
-            <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-300">
-              🌱 Good first issue
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-300">
+              <Icon name="sparkles" className="h-3.5 w-3.5" /> Good first issue
             </span>
           )}
         </div>
@@ -76,7 +77,7 @@ export default function RepoCard({ repo }: { repo: Repo }) {
 
         {repo.language && (
           <div className="mt-4 flex flex-wrap gap-2 text-xs">
-            <span className="rounded-md bg-white/5 px-2 py-0.5 text-zinc-300">💻 {repo.language}</span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-0.5 text-zinc-300"><Icon name="code" className="h-3 w-3" /> {repo.language}</span>
           </div>
         )}
 
@@ -121,12 +122,12 @@ export default function RepoCard({ repo }: { repo: Repo }) {
 
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-200/90">
-                <span aria-hidden>⭐</span>
+                <Icon name="star" className="h-3.5 w-3.5" />
                 {repo.stars.toLocaleString()} stars
               </span>
               {gfi && (
-                <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-300">
-                  🌱 Good first issue
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-300">
+                  <Icon name="sparkles" className="h-3.5 w-3.5" /> Good first issue
                 </span>
               )}
             </div>

@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { getDeepBrief } from "@/lib/brief";
 import { logoFor } from "@/lib/logo";
 import ImageGallery from "@/components/ImageGallery";
+import Icon from "@/components/Icon";
 import type { AccentColor, Technology, Update } from "@/lib/types";
 
 /**
@@ -278,8 +279,8 @@ export default async function TopicPage({ params }: Params) {
               </>
             ) : (
               !brief.grounded && (
-                <p className="text-xs text-zinc-500">
-                  ⚠ Written from the AI model&apos;s general knowledge (no live web sources) — may be less
+                <p className="inline-flex items-start gap-1.5 text-xs text-zinc-500">
+                  <Icon name="warning" className="mt-0.5 h-3.5 w-3.5 shrink-0" /> Written from the AI model&apos;s general knowledge (no live web sources) — may be less
                   precise for new or niche tools.
                 </p>
               )

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { AccentColor, Technology, Update } from "@/lib/types";
 import type { Brief } from "@/lib/brief";
 import { logoFor } from "@/lib/logo";
+import Icon from "@/components/Icon";
 import ImageGallery from "./ImageGallery";
 
 /**
@@ -225,8 +226,8 @@ export default function TopicModal() {
                     </>
                   ) : (
                     !brief.grounded && (
-                      <p className="text-xs text-zinc-500">
-                        ⚠ Written from the AI model&apos;s general knowledge (no live web sources) — may be
+                      <p className="inline-flex items-start gap-1.5 text-xs text-zinc-500">
+                        <Icon name="warning" className="mt-0.5 h-3.5 w-3.5 shrink-0" /> Written from the AI model&apos;s general knowledge (no live web sources) — may be
                         less precise for new or niche tools.
                       </p>
                     )
@@ -285,7 +286,7 @@ export default function TopicModal() {
               className={`group/km mt-7 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r ${accent.grad} px-5 py-3.5 ring-1 ${accent.ring} transition hover:brightness-125`}
             >
               <span className="flex items-center gap-2">
-                <span aria-hidden className="text-lg">✨</span>
+                <Icon name="sparkles" className="h-5 w-5" />
                 <span className="text-sm font-semibold text-white">
                   Know more — open the full deep dive
                 </span>

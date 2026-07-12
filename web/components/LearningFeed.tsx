@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { LearningResource, LearningKind } from "@/lib/types";
+import Icon, { type IconName } from "@/components/Icon";
 import LearningCard from "./LearningCard";
 
 /**
@@ -9,11 +10,11 @@ import LearningCard from "./LearningCard";
  * so switching kinds is instant. Mirrors OpportunitiesFeed / JobsFeed.
  */
 
-const KIND_TABS: { key: LearningKind | "all"; label: string }[] = [
+const KIND_TABS: { key: LearningKind | "all"; label: string; icon?: IconName }[] = [
   { key: "all", label: "All" },
-  { key: "course", label: "📘 Courses" },
-  { key: "certification", label: "📜 Certifications" },
-  { key: "talk", label: "🎤 Talks" },
+  { key: "course", label: "Courses", icon: "book" },
+  { key: "certification", label: "Certifications", icon: "certificate" },
+  { key: "talk", label: "Talks", icon: "microphone" },
 ];
 
 export default function LearningFeed({ items }: { items: LearningResource[] }) {
@@ -47,13 +48,13 @@ export default function LearningFeed({ items }: { items: LearningResource[] }) {
             <button
               key={t.key}
               onClick={() => setKind(t.key)}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
                 kind === t.key
                   ? "bg-white/90 text-canvas"
                   : "bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
               }`}
             >
-              {t.label}
+              {t.icon && <Icon name={t.icon} className="h-4 w-4" />} {t.label}
             </button>
           ))}
         </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { AccentColor, Opportunity, OpportunityKind } from "@/lib/types";
+import Icon, { type IconName } from "@/components/Icon";
 
 /**
  * Premium opportunity card — hackathons, competitions, conferences, internships, jobs.
@@ -37,13 +38,13 @@ const ACCENT: Record<AccentColor, { glow: string; ring: string; badge: string; c
   },
 };
 
-const KIND_META: Record<OpportunityKind, { label: string; icon: string }> = {
-  hackathon: { label: "Hackathon", icon: "⚡" },
-  competition: { label: "Competition", icon: "🏆" },
-  conference: { label: "Conference", icon: "🎤" },
-  internship: { label: "Internship", icon: "🎓" },
-  job: { label: "Job", icon: "💼" },
-  scholarship: { label: "Scholarship", icon: "📚" },
+const KIND_META: Record<OpportunityKind, { label: string; icon: IconName }> = {
+  hackathon: { label: "Hackathon", icon: "bolt" },
+  competition: { label: "Competition", icon: "trophy" },
+  conference: { label: "Conference", icon: "microphone" },
+  internship: { label: "Internship", icon: "cap" },
+  job: { label: "Job", icon: "briefcase" },
+  scholarship: { label: "Scholarship", icon: "book" },
 };
 
 /** Human, timezone-stable deadline label computed on the server (no hydration drift). */
@@ -70,7 +71,7 @@ function longDate(value: string | null): string | null {
 
 export default function OpportunityCard({ opp }: { opp: Opportunity }) {
   const accent = ACCENT[opp.accent_color] ?? ACCENT.cyan;
-  const kind = KIND_META[opp.kind] ?? { label: opp.kind, icon: "•" };
+  const kind = KIND_META[opp.kind] ?? { label: opp.kind, icon: "briefcase" as IconName };
   const dl = deadlineLabel(opp.deadline);
   const [open, setOpen] = useState(false);
 
@@ -100,7 +101,7 @@ export default function OpportunityCard({ opp }: { opp: Opportunity }) {
           <span
             className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${accent.badge}`}
           >
-            <span aria-hidden>{kind.icon}</span>
+            <Icon name={kind.icon} className="h-3.5 w-3.5" />
             {kind.label}
           </span>
           <span
@@ -126,16 +127,16 @@ export default function OpportunityCard({ opp }: { opp: Opportunity }) {
         {/* Meta chips: location, prize, eligibility */}
         <div className="mt-4 flex flex-wrap gap-2 text-xs">
           {(opp.location || opp.is_remote) && (
-            <span className="rounded-md bg-white/5 px-2 py-0.5 text-zinc-300">
-              📍 {opp.is_remote ? "Remote" : opp.location}
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-0.5 text-zinc-300">
+              <Icon name="pin" className="h-3 w-3" /> {opp.is_remote ? "Remote" : opp.location}
               {opp.country && opp.country !== "Global" ? ` · ${opp.country}` : ""}
             </span>
           )}
           {opp.prize && (
-            <span className="rounded-md bg-white/5 px-2 py-0.5 text-amber-200/90">💰 {opp.prize}</span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-0.5 text-amber-200/90"><Icon name="money" className="h-3 w-3" /> {opp.prize}</span>
           )}
           {opp.eligibility && (
-            <span className="rounded-md bg-white/5 px-2 py-0.5 text-zinc-400">✅ {opp.eligibility}</span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-0.5 text-zinc-400"><Icon name="check" className="h-3 w-3" /> {opp.eligibility}</span>
           )}
         </div>
 
@@ -186,7 +187,7 @@ export default function OpportunityCard({ opp }: { opp: Opportunity }) {
             <span
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${accent.badge}`}
             >
-              <span aria-hidden>{kind.icon}</span>
+              <Icon name={kind.icon} className="h-3.5 w-3.5" />
               {kind.label}
             </span>
             <h2 className="mt-3 pr-8 text-2xl font-bold text-white">{opp.title}</h2>
@@ -202,7 +203,7 @@ export default function OpportunityCard({ opp }: { opp: Opportunity }) {
                     : "bg-white/5 text-zinc-300"
               }`}
             >
-              🗓 {dl.text}
+              <span className="inline-flex items-center gap-1"><Icon name="calendar" className="h-3.5 w-3.5" /> {dl.text}</span>
               {opp.deadline && !dl.closed ? ` · deadline ${longDate(opp.deadline)}` : ""}
             </div>
 

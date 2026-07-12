@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { Opportunity, OpportunityKind } from "@/lib/types";
+import Icon, { type IconName } from "@/components/Icon";
 import OpportunityCard from "./OpportunityCard";
 
 /**
@@ -19,10 +20,10 @@ const KIND_TABS: { key: OpportunityKind | "all"; label: string }[] = [
   { key: "scholarship", label: "Scholarships" },
 ];
 
-const REGION_TABS: { key: "all" | "india" | "global"; label: string }[] = [
-  { key: "all", label: "🌐 Everywhere" },
-  { key: "india", label: "🇮🇳 India" },
-  { key: "global", label: "✈️ Global" },
+const REGION_TABS: { key: "all" | "india" | "global"; label: string; icon?: IconName }[] = [
+  { key: "all", label: "Everywhere", icon: "globe" },
+  { key: "india", label: "India", icon: "flag" },
+  { key: "global", label: "Global", icon: "plane" },
 ];
 
 export default function OpportunitiesFeed({ items }: { items: Opportunity[] }) {
@@ -62,13 +63,13 @@ export default function OpportunitiesFeed({ items }: { items: Opportunity[] }) {
             <button
               key={t.key}
               onClick={() => setRegion(t.key)}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
                 region === t.key
                   ? "bg-white/10 text-zinc-100 ring-1 ring-white/20"
                   : "bg-transparent text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              {t.label}
+              {t.icon && <Icon name={t.icon} className="h-4 w-4" />} {t.label}
             </button>
           ))}
         </div>

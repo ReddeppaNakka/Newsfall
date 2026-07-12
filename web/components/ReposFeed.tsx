@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { Repo } from "@/lib/types";
+import Icon, { type IconName } from "@/components/Icon";
 import RepoCard from "./RepoCard";
 
 /**
@@ -9,9 +10,9 @@ import RepoCard from "./RepoCard";
  * beginner-friendly (good-first-issue) repos; language chips are derived from data.
  */
 
-const LEVEL_TABS: { key: "all" | "beginner"; label: string }[] = [
+const LEVEL_TABS: { key: "all" | "beginner"; label: string; icon?: IconName }[] = [
   { key: "all", label: "All repos" },
-  { key: "beginner", label: "🌱 Beginner-friendly" },
+  { key: "beginner", label: "Beginner-friendly", icon: "sparkles" },
 ];
 
 export default function ReposFeed({ items }: { items: Repo[] }) {
@@ -54,13 +55,13 @@ export default function ReposFeed({ items }: { items: Repo[] }) {
             <button
               key={t.key}
               onClick={() => setLevel(t.key)}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
                 level === t.key
                   ? "bg-white/90 text-canvas"
                   : "bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
               }`}
             >
-              {t.label}
+              {t.icon && <Icon name={t.icon} className="h-4 w-4" />} {t.label}
             </button>
           ))}
         </div>

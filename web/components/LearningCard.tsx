@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { AccentColor, LearningResource, LearningKind } from "@/lib/types";
+import Icon, { type IconName } from "@/components/Icon";
 
 /**
  * Premium learning-resource card — free courses, certifications, and talks. Clicking
@@ -40,15 +41,15 @@ const ACCENT: Record<
   },
 };
 
-const KIND_META: Record<LearningKind, { label: string; icon: string; accent: AccentColor }> = {
-  course: { label: "Course", icon: "📘", accent: "cyan" },
-  certification: { label: "Certification", icon: "📜", accent: "emerald" },
-  talk: { label: "Talk", icon: "🎤", accent: "violet" },
-  video: { label: "Video", icon: "▶️", accent: "violet" },
+const KIND_META: Record<LearningKind, { label: string; icon: IconName; accent: AccentColor }> = {
+  course: { label: "Course", icon: "book", accent: "cyan" },
+  certification: { label: "Certification", icon: "certificate", accent: "emerald" },
+  talk: { label: "Talk", icon: "microphone", accent: "violet" },
+  video: { label: "Video", icon: "play", accent: "violet" },
 };
 
 export default function LearningCard({ item }: { item: LearningResource }) {
-  const meta = KIND_META[item.kind] ?? { label: item.kind, icon: "•", accent: "cyan" as AccentColor };
+  const meta = KIND_META[item.kind] ?? { label: item.kind, icon: "book" as IconName, accent: "cyan" as AccentColor };
   const accent = ACCENT[meta.accent];
   const [open, setOpen] = useState(false);
   const cta = item.kind === "certification" ? "View certification" : "Start learning";
@@ -76,12 +77,12 @@ export default function LearningCard({ item }: { item: LearningResource }) {
             <span
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${accent.badge}`}
             >
-              <span aria-hidden>{meta.icon}</span>
+              <Icon name={meta.icon} className="h-3.5 w-3.5" />
               {meta.label}
             </span>
             {item.is_featured && (
               <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-200">
-                ⭐ Popular
+                <Icon name="star" className="h-3 w-3" /> Popular
               </span>
             )}
           </div>
@@ -109,13 +110,13 @@ export default function LearningCard({ item }: { item: LearningResource }) {
 
         <div className="mt-4 flex flex-wrap gap-2 text-xs">
           {item.is_free && (
-            <span className="rounded-md bg-white/5 px-2 py-0.5 text-emerald-300/90">✅ Free</span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-0.5 text-emerald-300/90"><Icon name="check" className="h-3 w-3" /> Free</span>
           )}
           {item.has_certificate && (
-            <span className="rounded-md bg-white/5 px-2 py-0.5 text-amber-200/90">📜 Certificate</span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-0.5 text-amber-200/90"><Icon name="certificate" className="h-3 w-3" /> Certificate</span>
           )}
           {item.duration && (
-            <span className="rounded-md bg-white/5 px-2 py-0.5 text-zinc-400">⏱ {item.duration}</span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-0.5 text-zinc-400"><Icon name="clock" className="h-3 w-3" /> {item.duration}</span>
           )}
         </div>
 
@@ -164,12 +165,12 @@ export default function LearningCard({ item }: { item: LearningResource }) {
               <span
                 className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${accent.badge}`}
               >
-                <span aria-hidden>{meta.icon}</span>
+                <Icon name={meta.icon} className="h-3.5 w-3.5" />
                 {meta.label}
               </span>
               {item.is_featured && (
                 <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-200">
-                  ⭐ Popular
+                  <Icon name="star" className="h-3 w-3" /> Popular
                 </span>
               )}
             </div>
