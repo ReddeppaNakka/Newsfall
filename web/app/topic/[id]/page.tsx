@@ -48,7 +48,7 @@ function List({ title, items, dot }: { title: string; items: string[]; dot: stri
 function Meta({ label, value }: { label: string; value: string }) {
   if (!value) return null;
   return (
-    <div className="rounded-xl bg-white/5 px-4 py-3">
+    <div className="rounded-xl bg-white/5 px-3.5 py-2.5 sm:px-4 sm:py-3">
       <div className="text-[10px] uppercase tracking-wide text-zinc-500">{label}</div>
       <div className="mt-0.5 text-sm text-zinc-200">{value}</div>
     </div>
@@ -78,10 +78,10 @@ export default async function TopicPage({ params }: Params) {
   const logo = logoFor(tech.image_url, tech.homepage_url, tech.name);
 
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-6 py-12">
+    <main className="mx-auto min-h-screen max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
       <Link
         href="/"
-        className="inline-flex items-center gap-1 text-sm text-zinc-500 transition hover:text-zinc-200"
+        className="-my-1 inline-flex min-h-[40px] items-center gap-1 text-sm text-zinc-500 transition hover:text-zinc-200"
       >
         <svg className="h-4 w-4 rotate-180" viewBox="0 0 20 20" fill="currentColor">
           <path
@@ -94,19 +94,19 @@ export default async function TopicPage({ params }: Params) {
       </Link>
 
       {/* Hero */}
-      <div className="glass relative mt-6 overflow-hidden rounded-3xl p-8">
-        <div className="flex items-center gap-4">
-          <div className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br ${accent.grad}`}>
+      <div className="glass relative mt-5 overflow-hidden rounded-2xl p-5 sm:mt-6 sm:rounded-3xl sm:p-8">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <div className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br sm:h-16 sm:w-16 ${accent.grad}`}>
             {logo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logo} alt={tech.name} className="h-9 w-9 object-contain" />
+              <img src={logo} alt={tech.name} className="h-8 w-8 object-contain sm:h-9 sm:w-9" />
             ) : (
               <span className="text-3xl font-bold text-white/90">{tech.name.charAt(0).toUpperCase()}</span>
             )}
           </div>
           <div className="min-w-0">
             <span className="text-xs uppercase tracking-widest text-zinc-500">{tech.category}</span>
-            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">{tech.name}</h1>
+            <h1 className="break-words text-2xl font-bold tracking-tight text-white sm:text-4xl">{tech.name}</h1>
           </div>
           {tech.current_version && (
             <span className={`ml-auto shrink-0 rounded-full border border-white/10 px-3 py-1 text-sm ${accent.text}`}>
@@ -116,7 +116,7 @@ export default async function TopicPage({ params }: Params) {
         </div>
 
         {(brief?.overview || tech.tagline || tech.description) && (
-          <p className="mt-5 leading-relaxed text-zinc-300">
+          <p className="mt-5 text-[15px] leading-relaxed text-zinc-300 sm:text-base">
             {brief?.overview || tech.description || tech.tagline}
           </p>
         )}
@@ -142,11 +142,11 @@ export default async function TopicPage({ params }: Params) {
 
       {/* Full deep-dive brief */}
       {brief ? (
-        <section className="mt-10 space-y-10">
+        <section className="mt-8 space-y-8 sm:mt-10 sm:space-y-10">
           {/* In depth — long-form explanation */}
           {(brief.deep_overview || brief.how_it_works.length > 0) && (
             <div>
-              <h2 className="mb-3 text-xl font-semibold tracking-tight text-white">In depth</h2>
+              <h2 className="mb-3 text-lg font-semibold tracking-tight text-white sm:text-xl">In depth</h2>
               {brief.deep_overview
                 .split(/\n\n+/)
                 .filter(Boolean)
@@ -164,14 +164,14 @@ export default async function TopicPage({ params }: Params) {
           )}
 
           {(brief.created_by || brief.released || brief.pricing) && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3">
               <Meta label="Created by" value={brief.created_by} />
               <Meta label="Released" value={brief.released} />
               <Meta label="Pricing" value={brief.pricing} />
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
             <List title="Key features" items={brief.features} dot={accent.dot} />
             <List title="Advantages" items={brief.advantages} dot="bg-emerald-400" />
             <List title="Limitations" items={brief.disadvantages} dot="bg-rose-400" />
@@ -180,7 +180,7 @@ export default async function TopicPage({ params }: Params) {
 
           {/* Key concepts */}
           {brief.key_concepts.length > 0 && (
-            <div className="rounded-2xl bg-white/[0.03] p-5 ring-1 ring-white/5">
+            <div className="rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/5 sm:p-5">
               <List title="Key concepts to know" items={brief.key_concepts} dot={accent.dot} />
             </div>
           )}
@@ -208,7 +208,7 @@ export default async function TopicPage({ params }: Params) {
 
           {/* Comparison + alternatives */}
           {(brief.comparison || brief.alternatives.length > 0) && (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
               {brief.comparison && (
                 <div>
                   <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-400">
@@ -245,10 +245,10 @@ export default async function TopicPage({ params }: Params) {
           {/* FAQs */}
           {brief.faqs.length > 0 && (
             <div>
-              <h2 className="mb-4 text-xl font-semibold tracking-tight text-white">FAQ</h2>
+              <h2 className="mb-4 text-lg font-semibold tracking-tight text-white sm:text-xl">FAQ</h2>
               <div className="space-y-3">
                 {brief.faqs.map((f, i) => (
-                  <div key={i} className="rounded-2xl bg-white/[0.03] p-5 ring-1 ring-white/5">
+                  <div key={i} className="rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/5 sm:p-5">
                     <h4 className="font-medium text-zinc-100">{f.q}</h4>
                     <p className="mt-1.5 text-sm leading-relaxed text-zinc-400">{f.a}</p>
                   </div>
@@ -270,7 +270,7 @@ export default async function TopicPage({ params }: Params) {
                 <ul className="space-y-1">
                   {brief.sources.map((s, i) => (
                     <li key={i}>
-                      <a href={s.url} target="_blank" rel="noreferrer" className={`text-xs ${accent.text} hover:underline`}>
+                      <a href={s.url} target="_blank" rel="noreferrer" className={`inline-block break-all py-0.5 text-xs ${accent.text} hover:underline`}>
                         [{i + 1}] {s.title || s.url}
                       </a>
                     </li>
@@ -294,15 +294,15 @@ export default async function TopicPage({ params }: Params) {
       )}
 
       {/* Update history */}
-      <section className="mt-12">
-        <h2 className="mb-6 text-2xl font-semibold tracking-tight text-zinc-100">Update history</h2>
+      <section className="mt-10 sm:mt-12">
+        <h2 className="mb-5 text-xl font-semibold tracking-tight text-zinc-100 sm:mb-6 sm:text-2xl">Update history</h2>
 
         {list.length === 0 ? (
           <p className="text-zinc-500">No updates scraped yet — the daily job will populate this soon.</p>
         ) : (
-          <ol className="relative border-l border-white/10 pl-6">
+          <ol className="relative border-l border-white/10 pl-5 sm:pl-6">
             {list.map((u) => (
-              <li key={u.id} className="mb-8 last:mb-0">
+              <li key={u.id} className="mb-7 last:mb-0 sm:mb-8">
                 <span className={`absolute -left-[7px] mt-1.5 h-3 w-3 rounded-full ${accent.dot}`} />
                 <div className="flex flex-wrap items-center gap-2">
                   <time className="text-xs text-zinc-500">
@@ -316,11 +316,11 @@ export default async function TopicPage({ params }: Params) {
                   href={u.source_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-1 block text-lg font-medium text-zinc-100 hover:text-white"
+                  className="mt-1 block text-base font-medium text-zinc-100 hover:text-white sm:text-lg"
                 >
                   {u.title}
                 </a>
-                {u.summary && <p className="mt-1 text-zinc-400">{u.summary}</p>}
+                {u.summary && <p className="mt-1 text-sm text-zinc-400 sm:text-base">{u.summary}</p>}
               </li>
             ))}
           </ol>

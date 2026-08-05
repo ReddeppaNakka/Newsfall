@@ -77,16 +77,16 @@ export default function JobCard({ job }: { job: Job }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`group glass relative flex w-full flex-col overflow-hidden rounded-2xl p-5 text-left transition-all duration-300 hover:-translate-y-1 ${accent.glow}`}
+        className={`group glass relative flex w-full flex-col overflow-hidden rounded-2xl p-4 text-left transition-all duration-300 hover:-translate-y-1 sm:p-5 ${accent.glow}`}
       >
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
           <span
             className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${accent.badge}`}
           >
             <Icon name={job.is_fresher ? "sparkles" : "briefcase"} className="h-3.5 w-3.5" />
             {job.is_fresher ? "Fresher-friendly" : "Job"}
           </span>
-          {posted && <span className="shrink-0 text-xs font-medium text-zinc-400">{posted}</span>}
+          {posted && <span className="text-xs font-medium text-zinc-400">{posted}</span>}
         </div>
 
         <h3 className="mt-3 line-clamp-2 text-lg font-semibold text-zinc-100 group-hover:text-white">
@@ -145,17 +145,17 @@ export default function JobCard({ job }: { job: Job }) {
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm sm:p-8"
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/70 p-3 backdrop-blur-sm sm:p-8"
           onClick={() => setOpen(false)}
         >
           <div
-            className={`glass relative my-4 w-full max-w-xl rounded-3xl p-7 ring-1 ${accent.ring}`}
+            className={`glass relative my-2 w-full max-w-xl rounded-2xl p-5 ring-1 sm:my-4 sm:rounded-3xl sm:p-7 ${accent.ring}`}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setOpen(false)}
               aria-label="Close"
-              className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-zinc-300 transition hover:bg-white/20 hover:text-white"
+              className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-zinc-300 transition hover:bg-white/20 hover:text-white sm:right-4 sm:top-4"
             >
               <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
@@ -168,7 +168,7 @@ export default function JobCard({ job }: { job: Job }) {
               <Icon name={job.is_fresher ? "sparkles" : "briefcase"} className="h-3.5 w-3.5" />
               {job.is_fresher ? "Fresher-friendly" : "Job"}
             </span>
-            <h2 className="mt-3 pr-8 text-2xl font-bold text-white">{job.title}</h2>
+            <h2 className="mt-3 pr-10 text-xl font-bold leading-snug text-white sm:text-2xl">{job.title}</h2>
             {job.company && <p className="mt-1 text-sm text-zinc-400">at {job.company}</p>}
 
             {job.description && (
@@ -196,12 +196,12 @@ export default function JobCard({ job }: { job: Job }) {
               </div>
             )}
 
-            <div className="mt-6 flex items-center gap-3">
+            <div className="mt-6 flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
               <a
                 href={job.apply_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition ${accent.btn}`}
+                className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white transition sm:py-2.5 ${accent.btn}`}
               >
                 Apply now
                 <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -211,7 +211,7 @@ export default function JobCard({ job }: { job: Job }) {
               </a>
               <button
                 onClick={() => setOpen(false)}
-                className="text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
+                className="rounded-xl px-5 py-3 text-sm font-medium text-zinc-400 transition hover:bg-white/5 hover:text-zinc-200 sm:px-0 sm:py-2 sm:hover:bg-transparent"
               >
                 Close
               </button>

@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
- * Global navigation sidebar. Fixed rail on desktop (md+); a slide-in drawer on mobile
- * opened by a hamburger button. Highlights the active section from the current path.
+ * Global navigation sidebar. Fixed rail on desktop (md+); on mobile a sticky top bar
+ * plus a slide-in drawer. Highlights the active section from the current path.
+ *
+ * The mobile bar is a real in-flow element rather than a floating button, so it can
+ * never sit on top of the page's own header/back-link — which a fixed hamburger did.
  */
 
 type NavItem = { href: string; label: string; icon: string; match: (p: string) => boolean };
@@ -28,10 +31,10 @@ const NAV: NavItem[] = [
   { href: "/repos", label: "Repos", icon: ICONS.code, match: (p) => p.startsWith("/repos") },
 ];
 
-function Brand() {
+function Brand({ className = "" }: { className?: string }) {
   return (
-    <Link href="/" className="mb-6 flex items-center gap-2 px-2">
-      <span className="h-2.5 w-2.5 rounded-full bg-violet-400 shadow-glow-violet" />
+    <Link href="/" className={`flex min-h-[40px] items-center gap-2 ${className}`}>
+      <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-violet-400 shadow-glow-violet" />
       <span className="text-lg font-bold tracking-tight text-white">News_Pond</span>
     </Link>
   );
@@ -40,6 +43,25 @@ function Brand() {
 export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  // Close the drawer on Escape and freeze the page behind it, so scrolling the
+  // drawer doesn't scroll the dashboard underneath (classic mobile overlay bug).
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  // A tapped link may resolve to the page we're already on (no re-render of this
+  // component's parent), so close on every path change rather than on click alone.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   const links = (
     <nav className="flex flex-col gap-1">
@@ -50,7 +72,7 @@ export default function Sidebar() {
             key={item.href}
             href={item.href}
             onClick={() => setOpen(false)}
-            className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition ${
+            className={`flex min-h-[44px] items-center gap-3 rounded-xl px-3.5 py-3 text-[15px] font-medium transition md:py-2.5 md:text-sm ${
               active
                 ? "bg-white/10 text-white ring-1 ring-white/15"
                 : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100"
@@ -77,20 +99,24 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile hamburger */}
-      <button
-        onClick={() => setOpen(true)}
-        aria-label="Open menu"
-        className="fixed left-4 top-4 z-40 rounded-xl bg-white/10 p-2.5 text-zinc-100 backdrop-blur transition hover:bg-white/20 md:hidden"
-      >
-        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M3 5.75A.75.75 0 013.75 5h12.5a.75.75 0 010 1.5H3.75A.75.75 0 013 5.75zm0 4.25a.75.75 0 01.75-.75h12.5a.75.75 0 010 1.5H3.75A.75.75 0 013 10zm0 4.25a.75.75 0 01.75-.75h12.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z" clipRule="evenodd" />
-        </svg>
-      </button>
-
-      {/* Desktop rail */}
-      <aside className="fixed left-0 top-0 z-30 hidden h-screen w-60 flex-col border-r border-white/5 bg-black/30 px-4 py-6 backdrop-blur-xl md:flex">
+      {/* Mobile top bar — in normal flow, so page content always starts below it */}
+      <header className="sticky top-0 z-40 flex items-center gap-2 border-b border-white/5 bg-canvas/80 px-4 py-2.5 backdrop-blur-xl md:hidden">
+        <button
+          onClick={() => setOpen(true)}
+          aria-label="Open menu"
+          aria-expanded={open}
+          className="-ml-2 flex h-11 w-11 items-center justify-center rounded-xl text-zinc-100 transition active:bg-white/10"
+        >
+          <svg className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 5.75A.75.75 0 013.75 5h12.5a.75.75 0 010 1.5H3.75A.75.75 0 013 5.75zm0 4.25a.75.75 0 01.75-.75h12.5a.75.75 0 010 1.5H3.75A.75.75 0 013 10zm0 4.25a.75.75 0 01.75-.75h12.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z" clipRule="evenodd" />
+          </svg>
+        </button>
         <Brand />
+      </header>
+
+      {/* Desktop rail — dvh so mobile browser chrome can't clip the footer note */}
+      <aside className="fixed left-0 top-0 z-30 hidden h-[100dvh] w-60 flex-col border-r border-white/5 bg-black/30 px-4 py-6 backdrop-blur-xl md:flex">
+        <Brand className="mb-6 px-2" />
         {links}
         <p className="mt-auto px-2 text-xs leading-relaxed text-zinc-600">
           Your daily career-intelligence dashboard for freshers.
@@ -99,18 +125,24 @@ export default function Sidebar() {
 
       {/* Mobile drawer */}
       {open && (
-        <div className="fixed inset-0 z-50 md:hidden" onClick={() => setOpen(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div
+          className="fixed inset-0 z-50 md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation"
+          onClick={() => setOpen(false)}
+        >
+          <div className="absolute inset-0 animate-fade-in bg-black/60 backdrop-blur-sm" />
           <aside
-            className="absolute left-0 top-0 flex h-full w-64 flex-col border-r border-white/10 bg-canvas px-4 py-6"
+            className="absolute left-0 top-0 flex h-[100dvh] w-[min(17rem,85vw)] animate-slide-in-left flex-col overflow-y-auto border-r border-white/10 bg-canvas px-4 py-5"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-2 flex items-center justify-between">
-              <Brand />
+            <div className="mb-6 flex items-center justify-between gap-2">
+              <Brand className="px-1" />
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close menu"
-                className="mb-6 rounded-full bg-white/10 p-2 text-zinc-300 transition hover:bg-white/20 hover:text-white"
+                className="-mr-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-zinc-300 transition hover:bg-white/20 hover:text-white"
               >
                 <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
@@ -118,6 +150,9 @@ export default function Sidebar() {
               </button>
             </div>
             {links}
+            <p className="mt-auto px-2 pb-safe pt-8 text-xs leading-relaxed text-zinc-600">
+              Your daily career-intelligence dashboard for freshers.
+            </p>
           </aside>
         </div>
       )}

@@ -30,10 +30,21 @@ const config: Config = {
           "0%,100%": { opacity: "0.4" },
           "50%": { opacity: "0.8" },
         },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        // Mobile nav drawer.
+        "slide-in-left": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out both",
         "pulse-slow": "pulse-slow 6s ease-in-out infinite",
+        "fade-in": "fade-in 0.2s ease-out both",
+        "slide-in-left": "slide-in-left 0.25s cubic-bezier(0.32, 0.72, 0, 1) both",
       },
       backgroundImage: {
         "grid-faint":

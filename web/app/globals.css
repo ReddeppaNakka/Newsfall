@@ -12,6 +12,11 @@ body {
   background-color: #08080c; /* canvas */
   color: rgb(228 228 231); /* zinc-200 */
   -webkit-font-smoothing: antialiased;
+  /* Stop iOS/Android from re-flowing our type when the phone is rotated. */
+  -webkit-text-size-adjust: 100%;
+  /* `clip` (not `hidden`) kills stray horizontal scroll WITHOUT turning the page
+     into a scroll container — which would break the sticky mobile top bar. */
+  overflow-x: clip;
 }
 
 /* Faint dotted grid backdrop for depth */
@@ -24,6 +29,29 @@ body {
   background-size: 28px 28px;
 }
 
+/* Tighter grid on phones so the texture doesn't read as noise at small sizes. */
+@media (max-width: 640px) {
+  body {
+    background-size: 20px 20px;
+  }
+}
+
+/* No grey flash box when tapping cards/links on Android Chrome. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Long words / URLs must wrap instead of widening the page on narrow screens. */
+h1,
+h2,
+h3,
+h4,
+p,
+li,
+a {
+  overflow-wrap: break-word;
+}
+
 /* ---- Reusable glassmorphism surface ---- */
 @layer components {
   .glass {
@@ -31,11 +59,56 @@ body {
   }
 }
 
+@layer utilities {
+  /* Horizontal chip/thumbnail rails: swipeable, with the scrollbar hidden. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Respect the notch / home indicator when a bar is pinned to a screen edge. */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .px-safe {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
 /* Sleek thin scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-thumb {
   background: rgba(139, 92, 246, 0.35);
   border-radius: 9999px;
+}
+
+/* On touch devices a tap leaves :hover "stuck" on, so cards stay lifted and glowing
+   after you've moved on. Neutralise the hover-only affordances there. */
+@media (hover: none) {
+  .hover\:-translate-y-1:hover,
+  .hover\:-translate-y-0\.5:hover {
+    transform: none;
+  }
+  .hover\:shadow-glow-violet:hover,
+  .hover\:shadow-glow-cyan:hover,
+  .hover\:shadow-glow-emerald:hover {
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -123,22 +123,22 @@ export default async function HomePage() {
 
       {/* Opportunities for freshers — competitions, hackathons, conferences, internships */}
       {opportunities.length > 0 && (
-        <section className="mx-auto max-w-6xl px-6 pb-24">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
+          <div className="mb-5 flex items-center justify-between gap-3 sm:mb-6 sm:gap-4">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
               <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-glow-cyan" />
-              <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">
+              <h2 className="text-xl font-semibold tracking-tight text-zinc-100 sm:text-2xl">
                 Opportunities for Freshers
               </h2>
             </div>
             <Link
               href="/opportunities"
-              className="shrink-0 text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
+              className="inline-flex shrink-0 items-center whitespace-nowrap py-2.5 text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
             >
               See all →
             </Link>
           </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {opportunities.map((o) => (
               <OpportunityCard key={o.id} opp={o} />
             ))}
@@ -148,22 +148,22 @@ export default async function HomePage() {
 
       {/* Remote tech jobs — fresher-friendly first */}
       {jobs.length > 0 && (
-        <section className="mx-auto max-w-6xl px-6 pb-24">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
+          <div className="mb-5 flex items-center justify-between gap-3 sm:mb-6 sm:gap-4">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
               <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-glow-emerald" />
-              <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">
+              <h2 className="text-xl font-semibold tracking-tight text-zinc-100 sm:text-2xl">
                 Remote Tech Jobs
               </h2>
             </div>
             <Link
               href="/jobs"
-              className="shrink-0 text-sm font-medium text-emerald-300 transition hover:text-emerald-200"
+              className="inline-flex shrink-0 items-center whitespace-nowrap py-2.5 text-sm font-medium text-emerald-300 transition hover:text-emerald-200"
             >
               See all →
             </Link>
           </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {jobs.map((j) => (
               <JobCard key={j.id} job={j} />
             ))}
@@ -173,22 +173,22 @@ export default async function HomePage() {
 
       {/* Learn & get certified — free courses, certifications, talks */}
       {learning.length > 0 && (
-        <section className="mx-auto max-w-6xl px-6 pb-24">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
+          <div className="mb-5 flex items-center justify-between gap-3 sm:mb-6 sm:gap-4">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
               <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-glow-cyan" />
-              <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">
+              <h2 className="text-xl font-semibold tracking-tight text-zinc-100 sm:text-2xl">
                 Learn & Get Certified
               </h2>
             </div>
             <Link
               href="/learn"
-              className="shrink-0 text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
+              className="inline-flex shrink-0 items-center whitespace-nowrap py-2.5 text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
             >
               See all →
             </Link>
           </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {learning.map((r) => (
               <LearningCard key={r.id} item={r} />
             ))}
@@ -198,22 +198,22 @@ export default async function HomePage() {
 
       {/* Trending open-source repos */}
       {repos.length > 0 && (
-        <section className="mx-auto max-w-6xl px-6 pb-24">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
+          <div className="mb-5 flex items-center justify-between gap-3 sm:mb-6 sm:gap-4">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
               <span className="h-2 w-2 rounded-full bg-violet-400 shadow-glow-violet" />
-              <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">
+              <h2 className="text-xl font-semibold tracking-tight text-zinc-100 sm:text-2xl">
                 Trending Repositories
               </h2>
             </div>
             <Link
               href="/repos"
-              className="shrink-0 text-sm font-medium text-violet-300 transition hover:text-violet-200"
+              className="inline-flex shrink-0 items-center whitespace-nowrap py-2.5 text-sm font-medium text-violet-300 transition hover:text-violet-200"
             >
               See all →
             </Link>
           </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {repos.map((r) => (
               <RepoCard key={r.id} repo={r} />
             ))}
@@ -224,7 +224,7 @@ export default async function HomePage() {
       {/* `hot` rows carry an embedded `technology` object matching the feed's prop type. */}
       <HotTopicsFeed items={(hot ?? []) as never} />
 
-      <footer className="border-t border-white/5 py-10 text-center text-sm text-zinc-600">
+      <footer className="border-t border-white/5 px-4 py-10 pb-safe text-center text-xs text-zinc-600 sm:text-sm">
         News_Pond · open source · data auto-refreshed daily via GitHub Actions
       </footer>
 

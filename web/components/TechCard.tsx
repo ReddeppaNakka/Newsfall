@@ -50,12 +50,12 @@ export default function TechCard({ tech }: { tech: Technology }) {
     >
       {/* Logo tile — real logo when we have one, else a monogram on an accent gradient */}
       <div
-        className={`relative flex h-40 w-full items-center justify-center overflow-hidden bg-gradient-to-br ${accent.grad}`}
+        className={`relative flex h-32 w-full items-center justify-center overflow-hidden bg-gradient-to-br sm:h-40 ${accent.grad}`}
       >
         <Logo
           src={logo}
           name={tech.name}
-          className="h-16 w-16 rounded-2xl object-contain transition-transform duration-500 group-hover:scale-110"
+          className="h-14 w-14 rounded-2xl object-contain transition-transform duration-500 group-hover:scale-110 sm:h-16 sm:w-16"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/20 to-transparent" />
         {/* Version badge */}
@@ -69,12 +69,12 @@ export default function TechCard({ tech }: { tech: Technology }) {
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col p-5">
-        <span className="text-[11px] uppercase tracking-widest text-zinc-500">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <span className="text-[10px] uppercase tracking-widest text-zinc-500 sm:text-[11px]">
           {tech.category}
         </span>
         <h3
-          className={`mt-1 text-lg font-semibold text-zinc-100 transition-colors ${accent.text}`}
+          className={`mt-1 text-base font-semibold text-zinc-100 transition-colors sm:text-lg ${accent.text}`}
         >
           {tech.name}
         </h3>

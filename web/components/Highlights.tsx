@@ -20,17 +20,17 @@ export default function Highlights({ items }: { items: Item[] }) {
   if (!items.length) return null;
 
   return (
-    <section className="mx-auto max-w-6xl px-6 pb-4 pt-8">
-      <div className="mb-6 flex items-center gap-3">
+    <section className="mx-auto max-w-6xl px-4 pb-4 pt-6 sm:px-6 sm:pt-8">
+      <div className="mb-5 flex items-center gap-2.5 sm:mb-6 sm:gap-3">
         <span className="text-zinc-100">
           <Icon name="fire" className="h-5 w-5" />
         </span>
-        <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">
+        <h2 className="text-xl font-semibold tracking-tight text-zinc-100 sm:text-2xl">
           This week&apos;s highlights
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4">
         {items.map((u) => {
           const accent = ACCENT[u.technology.accent_color] ?? ACCENT.violet;
           const major = (u.importance ?? 0) >= 5;
@@ -39,7 +39,7 @@ export default function Highlights({ items }: { items: Item[] }) {
               key={u.id}
               href={`/?topic=${u.technology.slug}`}
               scroll={false}
-              className="glass group flex flex-col rounded-2xl p-5 transition hover:-translate-y-0.5 hover:border-white/20"
+              className="glass group flex flex-col rounded-2xl p-4 transition hover:-translate-y-0.5 hover:border-white/20 sm:p-5"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-2 text-sm font-medium text-zinc-300">

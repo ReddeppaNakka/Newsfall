@@ -35,20 +35,20 @@ export default function LearningFeed({ items }: { items: LearningResource[] }) {
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-3">
+      <div className="mb-6 flex flex-col gap-2.5 sm:gap-3">
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search courses, certifications or topics (e.g. Azure, AI)…"
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none transition focus:border-white/20 focus:bg-white/10"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-zinc-100 placeholder:text-zinc-500 outline-none transition focus:border-white/20 focus:bg-white/10 sm:py-2.5 sm:text-sm"
         />
         <div className="flex flex-wrap gap-2">
           {KIND_TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setKind(t.key)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition sm:py-1.5 ${
                 kind === t.key
                   ? "bg-white/90 text-canvas"
                   : "bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
@@ -65,7 +65,7 @@ export default function LearningFeed({ items }: { items: LearningResource[] }) {
           No resources match these filters yet — try clearing the search.
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {filtered.map((r) => (
             <LearningCard key={r.id} item={r} />
           ))}

@@ -121,17 +121,17 @@ export default function TopicModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm sm:p-8"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/70 p-3 backdrop-blur-sm sm:p-8"
       onClick={close}
     >
       <div
-        className={`glass relative my-4 w-full max-w-2xl rounded-3xl ring-1 ${accent.ring}`}
+        className={`glass relative my-2 w-full max-w-2xl rounded-2xl ring-1 sm:my-4 sm:rounded-3xl ${accent.ring}`}
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={close}
           aria-label="Close"
-          className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-zinc-300 transition hover:bg-white/20 hover:text-white"
+          className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-zinc-300 transition hover:bg-white/20 hover:text-white sm:right-4 sm:top-4"
         >
           <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
@@ -144,31 +144,37 @@ export default function TopicModal() {
             <span className="ml-3 text-sm text-zinc-400">Loading…</span>
           </div>
         ) : (
-          <div className="p-7">
-            {/* Header */}
-            <div className="flex items-center gap-4">
-              <div className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br ${accent.grad}`}>
+          <div className="p-5 sm:p-7">
+            {/* Header — the version pill drops onto its own line on narrow screens
+                rather than crushing the technology name against the close button. */}
+            <div className="flex items-center gap-3 pr-10 sm:gap-4">
+              <div className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br sm:h-14 sm:w-14 ${accent.grad}`}>
                 {logo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logo} alt={tech.name} className="h-8 w-8 object-contain" loading="lazy" />
+                  <img src={logo} alt={tech.name} className="h-7 w-7 object-contain sm:h-8 sm:w-8" loading="lazy" />
                 ) : (
-                  <span className="text-2xl font-bold text-white/90">{tech.name.charAt(0).toUpperCase()}</span>
+                  <span className="text-xl font-bold text-white/90 sm:text-2xl">{tech.name.charAt(0).toUpperCase()}</span>
                 )}
               </div>
               <div className="min-w-0">
-                <span className="text-[11px] uppercase tracking-widest text-zinc-500">{tech.category}</span>
-                <h2 className="truncate text-2xl font-bold text-white">{tech.name}</h2>
+                <span className="text-[10px] uppercase tracking-widest text-zinc-500 sm:text-[11px]">{tech.category}</span>
+                <h2 className="truncate text-xl font-bold text-white sm:text-2xl">{tech.name}</h2>
               </div>
               {tech.current_version && (
-                <span className={`ml-auto mr-8 shrink-0 rounded-full border border-white/10 px-3 py-1 text-sm ${accent.text}`}>
+                <span className={`ml-auto hidden shrink-0 rounded-full border border-white/10 px-3 py-1 text-sm sm:inline ${accent.text}`}>
                   v{tech.current_version}
                 </span>
               )}
             </div>
+            {tech.current_version && (
+              <span className={`mt-3 inline-block rounded-full border border-white/10 px-3 py-1 text-xs sm:hidden ${accent.text}`}>
+                v{tech.current_version}
+              </span>
+            )}
 
             {/* Overview */}
             {(brief?.overview || tech.tagline || tech.description) && (
-              <p className="mt-4 leading-relaxed text-zinc-300">
+              <p className="mt-4 text-[15px] leading-relaxed text-zinc-300 sm:text-base">
                 {brief?.overview || tech.description || tech.tagline}
               </p>
             )}
@@ -184,14 +190,14 @@ export default function TopicModal() {
             {brief ? (
               <>
                 {(brief.created_by || brief.released || brief.pricing) && (
-                  <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3">
                     <Meta label="Created by" value={brief.created_by} />
                     <Meta label="Released" value={brief.released} />
                     <Meta label="Pricing" value={brief.pricing} />
                   </div>
                 )}
 
-                <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
                   <List title="Key features" items={brief.features} dot={accent.dot} />
                   <List title="Advantages" items={brief.advantages} dot="bg-emerald-400" />
                   <List title="Limitations" items={brief.disadvantages} dot="bg-rose-400" />
@@ -256,10 +262,10 @@ export default function TopicModal() {
                         href={u.source_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="group flex items-start justify-between gap-3 rounded-lg px-2 py-1.5 transition hover:bg-white/[0.04]"
+                        className="group flex items-start justify-between gap-3 rounded-lg px-2 py-2 transition hover:bg-white/[0.04]"
                       >
                         <span className="text-sm text-zinc-300 group-hover:text-white">{u.title}</span>
-                        <span className="shrink-0 text-xs text-zinc-600">
+                        <span className="hidden shrink-0 text-xs text-zinc-600 sm:block">
                           {u.published_at ? new Date(u.published_at).toLocaleDateString() : ""}
                         </span>
                       </a>
@@ -283,16 +289,16 @@ export default function TopicModal() {
             {/* Know more — final call-to-action → full deep-dive page */}
             <Link
               href={`/topic/${tech.slug}`}
-              className={`group/km mt-7 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r ${accent.grad} px-5 py-3.5 ring-1 ${accent.ring} transition hover:brightness-125`}
+              className={`group/km mt-7 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r ${accent.grad} px-4 py-3.5 ring-1 ${accent.ring} transition hover:brightness-125 sm:px-5`}
             >
-              <span className="flex items-center gap-2">
-                <Icon name="sparkles" className="h-5 w-5" />
+              <span className="flex min-w-0 items-center gap-2">
+                <Icon name="sparkles" className="h-5 w-5 shrink-0" />
                 <span className="text-sm font-semibold text-white">
                   Know more — open the full deep dive
                 </span>
               </span>
               <svg
-                className="h-5 w-5 text-white transition-transform group-hover/km:translate-x-1"
+                className="h-5 w-5 shrink-0 text-white transition-transform group-hover/km:translate-x-1"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >

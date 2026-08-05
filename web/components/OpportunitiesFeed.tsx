@@ -42,13 +42,13 @@ export default function OpportunitiesFeed({ items }: { items: Opportunity[] }) {
   return (
     <div>
       {/* Filters */}
-      <div className="mb-6 flex flex-col gap-3">
+      <div className="mb-6 flex flex-col gap-2.5 sm:gap-3">
         <div className="flex flex-wrap gap-2">
           {KIND_TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setKind(t.key)}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+              className={`rounded-full px-3.5 py-2 text-sm font-medium transition sm:py-1.5 ${
                 kind === t.key
                   ? "bg-white/90 text-canvas"
                   : "bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
@@ -63,7 +63,7 @@ export default function OpportunitiesFeed({ items }: { items: Opportunity[] }) {
             <button
               key={t.key}
               onClick={() => setRegion(t.key)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition sm:py-1.5 ${
                 region === t.key
                   ? "bg-white/10 text-zinc-100 ring-1 ring-white/20"
                   : "bg-transparent text-zinc-500 hover:text-zinc-300"
@@ -81,7 +81,7 @@ export default function OpportunitiesFeed({ items }: { items: Opportunity[] }) {
           No opportunities match these filters yet — check back after the next refresh.
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {filtered.map((o) => (
             <OpportunityCard key={o.id} opp={o} />
           ))}
