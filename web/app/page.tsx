@@ -18,7 +18,7 @@ import TopicModal from "@/components/TopicModal";
  * `revalidate = 3600` means Next.js re-fetches at most once an hour (ISR), so the
  * page reflects new scraper data without a redeploy while staying cheap to serve.
  */
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export default async function HomePage() {
   // 1) All technologies for the grid.

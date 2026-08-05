@@ -8,7 +8,7 @@ import ReposFeed from "@/components/ReposFeed";
  * to, from the GitHub Search API. Server-rendered with hourly ISR; filtering by
  * beginner-friendly / language / search happens client-side.
  */
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export const metadata = {
   title: "Trending GitHub Repos — News_Pond",

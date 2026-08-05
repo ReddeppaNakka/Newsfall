@@ -8,7 +8,7 @@ import OpportunitiesFeed from "@/components/OpportunitiesFeed";
  * hackathons, competitions, conferences, internships, jobs & scholarships.
  * Server-rendered from Supabase with hourly ISR; filtering happens client-side.
  */
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export const metadata = {
   title: "Opportunities for Freshers — News_Pond",

@@ -8,7 +8,7 @@ import JobsFeed from "@/components/JobsFeed";
  * from free sources (RemoteOK, We Work Remotely). Server-rendered with hourly ISR;
  * filtering (fresher / region / skill search) happens client-side.
  */
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export const metadata = {
   title: "Remote Tech Jobs for Freshers — News_Pond",

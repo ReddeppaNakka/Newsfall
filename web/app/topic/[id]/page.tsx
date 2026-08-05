@@ -13,7 +13,7 @@ import type { AccentColor, Technology, Update } from "@/lib/types";
  * instant), and adds a relevant-image gallery, the complete brief, sources, and the
  * full update history.
  */
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export async function generateStaticParams() {
   const { data } = await supabase.from("technologies").select("slug");

@@ -8,7 +8,7 @@ import LearningFeed from "@/components/LearningFeed";
  * and YouTube (freeCodeCamp + vendor dev channels). Server-rendered with hourly ISR;
  * filtering by kind / search happens client-side.
  */
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export const metadata = {
   title: "Free Courses & Certifications — News_Pond",
