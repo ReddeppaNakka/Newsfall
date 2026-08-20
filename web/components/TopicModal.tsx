@@ -62,6 +62,9 @@ export default function TopicModal() {
   const [basics, setBasics] = useState<Basics | null>(null);
   const [brief, setBrief] = useState<Brief | null>(null);
   const [briefLoading, setBriefLoading] = useState(false);
+  // Distinguishes "still loading" from "the request failed" — without it a dead
+  // endpoint leaves the popup spinning on "Loading…" with no way to tell why.
+  const [basicsFailed, setBasicsFailed] = useState(false);
 
   const close = useCallback(() => {
     router.push(window.location.pathname, { scroll: false });
@@ -72,25 +75,36 @@ export default function TopicModal() {
     if (!slug) {
       setBasics(null);
       setBrief(null);
+      setBasicsFailed(false);
       return;
     }
     let cancelled = false;
     setBasics(null);
     setBrief(null);
+    setBasicsFailed(false);
     setBriefLoading(true);
 
     // Phase 1 — fast basics.
     fetch(`/api/topic/${encodeURIComponent(slug)}`)
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d) => {
-        if (!cancelled) setBasics(d);
+        if (cancelled) return;
+        if (d?.technology) setBasics(d);
+        else setBasicsFailed(true);
+      })
+      .catch(() => {
+        if (!cancelled) setBasicsFailed(true);
       });
 
-    // Phase 2 — AI brief (independent; may take a few seconds).
+    // Phase 2 — AI brief (independent; may take a few seconds). A failure here is
+    // non-fatal: the popup still shows the header and the update list.
     fetch(`/api/topic/${encodeURIComponent(slug)}/brief`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!cancelled) setBrief(d?.brief ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setBrief(null);
       })
       .finally(() => {
         if (!cancelled) setBriefLoading(false);
@@ -139,10 +153,32 @@ export default function TopicModal() {
         </button>
 
         {!tech ? (
-          <div className="flex h-64 items-center justify-center">
-            <span className={`h-2 w-2 animate-ping rounded-full ${accent.dot}`} />
-            <span className="ml-3 text-sm text-zinc-400">Loading…</span>
-          </div>
+          basicsFailed ? (
+            <div className="flex h-64 flex-col items-center justify-center gap-4 px-6 text-center">
+              <p className="text-sm text-zinc-400">
+                Couldn&apos;t load this technology right now.
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <Link
+                  href={`/topic/${slug}`}
+                  className={`rounded-xl bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/20`}
+                >
+                  Open the full page instead
+                </Link>
+                <button
+                  onClick={close}
+                  className="px-5 py-2.5 text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex h-64 items-center justify-center">
+              <span className={`h-2 w-2 animate-ping rounded-full ${accent.dot}`} />
+              <span className="ml-3 text-sm text-zinc-400">Loading…</span>
+            </div>
+          )
         ) : (
           <div className="p-5 sm:p-7">
             {/* Header — the version pill drops onto its own line on narrow screens
