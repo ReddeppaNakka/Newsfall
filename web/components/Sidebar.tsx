@@ -23,8 +23,18 @@ const ICONS = {
   code: "M14.25 9.75 16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z",
 };
 
+// Intelligence-layer icons (same outline style).
+const INTEL_ICONS = {
+  signal: "M3 18.75h18M5.25 15.75v-3m4.5 3V9.75m4.5 6V6.75m4.5 9V3.75",
+  network: "M12 5.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Zm0 0v4.5m0 0a2.25 2.25 0 1 1 0 4.5 2.25 2.25 0 0 1 0-4.5Zm0 4.5 5.25 4.5m-5.25-4.5-5.25 4.5m10.5 0a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Zm-10.5 0a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Z",
+  ask: "M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z",
+};
+
 const NAV: NavItem[] = [
   { href: "/", label: "Dashboard", icon: ICONS.home, match: (p) => p === "/" },
+  { href: "/intelligence", label: "Intelligence", icon: INTEL_ICONS.signal, match: (p) => p.startsWith("/intelligence") || p.startsWith("/events") },
+  { href: "/entities", label: "Entities", icon: INTEL_ICONS.network, match: (p) => p.startsWith("/entities") },
+  { href: "/ask", label: "Ask Newsfall", icon: INTEL_ICONS.ask, match: (p) => p.startsWith("/ask") },
   { href: "/jobs", label: "Jobs", icon: ICONS.briefcase, match: (p) => p.startsWith("/jobs") },
   { href: "/opportunities", label: "Opportunities", icon: ICONS.trophy, match: (p) => p.startsWith("/opportunities") },
   { href: "/learn", label: "Learn & Certs", icon: ICONS.book, match: (p) => p.startsWith("/learn") },
@@ -119,7 +129,7 @@ export default function Sidebar() {
         <Brand className="mb-6 px-2" />
         {links}
         <p className="mt-auto px-2 text-xs leading-relaxed text-zinc-600">
-          Your daily career-intelligence dashboard for freshers.
+          Evidence-driven technology &amp; industry intelligence.
         </p>
       </aside>
 
@@ -151,7 +161,7 @@ export default function Sidebar() {
             </div>
             {links}
             <p className="mt-auto px-2 pb-safe pt-8 text-xs leading-relaxed text-zinc-600">
-              Your daily career-intelligence dashboard for freshers.
+              Evidence-driven technology &amp; industry intelligence.
             </p>
           </aside>
         </div>

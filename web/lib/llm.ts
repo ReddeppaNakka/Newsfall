@@ -7,7 +7,7 @@ import "server-only";
 
 const LLM_API_KEY = process.env.LLM_API_KEY;
 const LLM_BASE_URL = process.env.LLM_BASE_URL || "https://api.groq.com/openai/v1";
-const LLM_MODEL = process.env.LLM_MODEL || "llama-3.3-70b-versatile";
+const LLM_MODEL = process.env.LLM_MODEL || "openai/gpt-oss-120b";
 
 export async function llmJson(
   prompt: string,

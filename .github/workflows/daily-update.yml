@@ -21,17 +21,30 @@ jobs:
 
       - name: Install dependencies
         working-directory: automation
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt
 
-      - name: Run scraper
+      - name: Unit tests (intelligence logic, no network)
+        working-directory: automation
+        run: python -m pytest -q tests
+
+      - name: Run scraper + intelligence pipeline
         working-directory: automation
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          # AI gateway — OpenRouter preferred; LLM_* is the fallback / legacy tools pipeline.
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          LLM_FAST_MODEL: ${{ vars.LLM_FAST_MODEL }}
+          LLM_REASONING_MODEL: ${{ vars.LLM_REASONING_MODEL }}
+          LLM_PREMIUM_MODEL: ${{ vars.LLM_PREMIUM_MODEL }}
+          EMBEDDING_MODEL: ${{ vars.EMBEDDING_MODEL }}
+          EMBEDDING_BASE_URL: ${{ vars.EMBEDDING_BASE_URL }}
+          EMBEDDING_API_KEY: ${{ secrets.EMBEDDING_API_KEY }}
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          # Optional overrides — defaults in scraper.py target Groq's free tier.
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
           LLM_MODEL: ${{ secrets.LLM_MODEL }}
-          # Auto-provided by GitHub — raises the GitHub Search API rate limit for repos_pipeline.
+          INTEL_MAX_LLM_CALLS_PER_RUN: ${{ vars.INTEL_MAX_LLM_CALLS_PER_RUN }}
+          LOG_FORMAT: json
+          # Auto-provided by GitHub — raises the GitHub API rate limit.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scraper.py

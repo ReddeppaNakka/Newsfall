@@ -2,7 +2,8 @@
 Newsfall — Automation entry point
 ==================================
 
-Run by GitHub Actions daily (and locally). Orchestrates two pipelines:
+Run by GitHub Actions daily (and locally). Orchestrates the legacy content pipelines
+and then the intelligence pipeline:
 
   1. tools_pipeline       — tracks languages, frameworks & AI models. Targeted feeds
                             for the always-on tools PLUS broad "discovery" feeds where
@@ -21,6 +22,11 @@ Run by GitHub Actions daily (and locally). Orchestrates two pipelines:
   5. repos_pipeline       — trending GitHub repositories to learn from / contribute to
                             (free GitHub Search API, LLM-free, deduped on url).
 
+  6. newsfall (intelligence) — sources → raw articles → entities → claims → events →
+                            verification → scoring → analysis → briefing. Guarded by
+                            INTELLIGENCE_ENABLED and isolated so it can never fail the
+                            legacy pipelines. See docs/INTELLIGENCE_ARCHITECTURE.md.
+
 Everything is idempotent (dedupe on a unique url), so re-running is safe.
 
 Run locally:
@@ -30,6 +36,8 @@ Run locally:
 """
 
 from __future__ import annotations
+
+import os
 
 import common
 import jobs_pipeline
@@ -57,6 +65,15 @@ def run() -> None:
         f"\nDone. Tools: {tools_n} updates · Opportunities: {opps_n} · "
         f"Jobs: {jobs_n} · Learning: {learn_n} · Repos: {repos_n} upserted."
     )
+
+    if os.getenv("INTELLIGENCE_ENABLED", "1").strip().lower() in {"1", "true", "yes", "on"}:
+        print("\n=== INTELLIGENCE ===")
+        try:
+            from newsfall.orchestrator import run_pipeline
+
+            run_pipeline(db)
+        except Exception as exc:  # noqa: BLE001 — never let the new layer break the legacy run
+            print(f"  ! intelligence pipeline failed: {exc}")
 
 
 if __name__ == "__main__":

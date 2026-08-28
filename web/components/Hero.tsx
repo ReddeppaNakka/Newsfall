@@ -23,12 +23,12 @@ export default function Hero({
       </span>
 
       <h1 className="mx-auto mt-5 max-w-3xl bg-gradient-to-br from-white via-zinc-200 to-zinc-500 bg-clip-text text-[2rem] font-bold leading-[1.15] tracking-tight text-transparent animate-fade-up sm:mt-6 sm:text-5xl sm:leading-tight md:text-6xl">
-        The pulse of frontier AI & modern tech
+        The signal behind the noise
       </h1>
 
       <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-400 animate-fade-up sm:mt-5 sm:text-lg">
-        Every model release, language version, and framework update — scraped,
-        structured, and surfaced automatically. No stale docs, no manual edits.
+        What happened, why it matters, who is involved, and how sure we are — every
+        development clustered from multiple sources, verified against evidence, and scored.
       </p>
 
       {/* Latest headline ticker */}
