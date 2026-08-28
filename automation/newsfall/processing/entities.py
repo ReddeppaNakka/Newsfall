@@ -82,7 +82,17 @@ class EntityResolver:
             "description": description,
             "technology_id": self.tech_by_key.get(key) if entity_type in ("TECHNOLOGY", "PRODUCT") else None,
         }
-        created = self.db.table("entities").insert(row).execute().data[0]
+        try:
+            created = self.db.table("entities").insert(row).execute().data[0]
+        except Exception as exc:  # noqa: BLE001 — slug race / stale index → adopt or re-slug
+            if "23505" not in str(exc) and "duplicate key" not in str(exc):
+                raise
+            existing = self.db.table("entities").select("id,slug,name,entity_type,aliases").eq("slug", slug).execute().data
+            if existing and alias_key(existing[0]["name"]) == key:
+                created = existing[0]
+            else:
+                row["slug"] = f"{base}-{short_hash(key + entity_type, 6)}"
+                created = self.db.table("entities").insert(row).execute().data[0]
         eid = created["id"]
         self.id_to_entity[eid] = created
         self.slugs.add(slug)
@@ -150,7 +160,8 @@ def run_entity_extraction(db, cfg: PipelineConfig, llm: LLMService) -> dict:
         for ent in (ext.entities if ext else []):
             try:
                 eid = resolver.get_or_create(ent.name, ent.type, ent.aliases)
-            except ValueError:
+            except Exception as exc:  # noqa: BLE001 — one unresolvable entity never aborts the stage
+                log.warning("entity resolution failed", entity=ent.name, error=str(exc)[:200])
                 continue
             mentions.append({"article_id": art["id"], "entity_id": eid, "mention_type": ent.mention_type,
                              "confidence": ent.confidence, "context": (ent.context or None) and ent.context[:300]})

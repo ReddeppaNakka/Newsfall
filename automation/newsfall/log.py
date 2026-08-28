@@ -48,6 +48,11 @@ def configure() -> None:
     global _configured
     if _configured:
         return
+    # Windows consoles default to cp1252; entity names contain arbitrary Unicode.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
+    except (AttributeError, ValueError):
+        pass
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(_JsonFormatter() if os.getenv("LOG_FORMAT", "").lower() == "json" else _TextFormatter())
     root = logging.getLogger("newsfall")
