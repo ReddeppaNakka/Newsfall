@@ -1,4 +1,4 @@
-# News_Pond — Ultra-Premium Tech & AI Tracker
+# Newsfall — Ultra-Premium Tech & AI Tracker
 
 A 100% free-stack, open-source platform that tracks the latest in programming languages,
 frameworks, and frontier AI models. Data is **never hardcoded** — a daily Python job
@@ -27,7 +27,7 @@ The Next.js 15 frontend renders that live data with a premium dark, glassmorphic
 ## Repository Structure
 
 ```
-News_Pond/
+Newsfall/
 ├── web/                          # Next.js 15 frontend
 │   ├── app/
 │   │   ├── layout.tsx            # Root layout, fonts, dark canvas

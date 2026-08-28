@@ -1,5 +1,5 @@
 """
-News_Pond — Jobs & internships pipeline
+Newsfall — Jobs & internships pipeline
 =======================================
 
 Fresher-focused job listings from FREE, scraping-permitted sources only:

@@ -1,5 +1,5 @@
 -- ============================================================================
--- News_Pond — Supabase schema
+-- Newsfall — Supabase schema
 -- Run this entire file once in the Supabase SQL Editor.
 -- It is idempotent-ish: safe to re-run during development.
 -- ============================================================================

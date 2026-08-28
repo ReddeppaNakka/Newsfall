@@ -1,5 +1,5 @@
 """
-News_Pond — Opportunities pipeline
+Newsfall — Opportunities pipeline
 ==================================
 
 Hybrid sourcing (as chosen): a hand-curated JSON of the famous, feed-less

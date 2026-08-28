@@ -6,7 +6,7 @@ import Sidebar from "@/components/Sidebar";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "News_Pond — Tech & AI Tracker",
+  title: "Newsfall — Tech & AI Tracker",
   description:
     "Live tracker for frontier AI models, languages, and frameworks. Auto-updated daily.",
 };

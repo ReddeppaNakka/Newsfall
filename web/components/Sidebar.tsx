@@ -35,7 +35,7 @@ function Brand({ className = "" }: { className?: string }) {
   return (
     <Link href="/" className={`flex min-h-[40px] items-center gap-2 ${className}`}>
       <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-violet-400 shadow-glow-violet" />
-      <span className="text-lg font-bold tracking-tight text-white">News_Pond</span>
+      <span className="text-lg font-bold tracking-tight text-white">Newsfall</span>
     </Link>
   );
 }

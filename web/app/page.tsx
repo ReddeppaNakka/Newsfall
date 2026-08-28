@@ -225,7 +225,7 @@ export default async function HomePage() {
       <HotTopicsFeed items={(hot ?? []) as never} />
 
       <footer className="border-t border-white/5 px-4 py-10 pb-safe text-center text-xs text-zinc-600 sm:text-sm">
-        News_Pond · open source · data auto-refreshed daily via GitHub Actions
+        Newsfall · open source · data auto-refreshed daily via GitHub Actions
       </footer>
 
       {/* Detail popup — opens when the URL has ?topic=<slug> */}

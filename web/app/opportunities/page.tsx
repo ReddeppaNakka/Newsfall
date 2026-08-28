@@ -11,7 +11,7 @@ import OpportunitiesFeed from "@/components/OpportunitiesFeed";
 export const revalidate = 60;
 
 export const metadata = {
-  title: "Opportunities for Freshers — News_Pond",
+  title: "Opportunities for Freshers — Newsfall",
   description:
     "Hackathons, competitions, conferences, internships and jobs for entry-level engineers — India-first, global included.",
 };
@@ -36,7 +36,7 @@ export default async function OpportunitiesPage() {
         href="/"
         className="-my-1 inline-flex min-h-[40px] items-center text-sm text-zinc-500 transition hover:text-zinc-300"
       >
-        ← Back to News_Pond
+        ← Back to Newsfall
       </Link>
 
       <header className="mb-8 mt-5 sm:mb-10 sm:mt-6">
@@ -56,7 +56,7 @@ export default async function OpportunitiesPage() {
       <OpportunitiesFeed items={opportunities} />
 
       <footer className="mt-16 border-t border-white/5 pb-safe pt-8 text-center text-xs text-zinc-600 sm:mt-20 sm:pt-10 sm:text-sm">
-        News_Pond · open source · data auto-refreshed daily
+        Newsfall · open source · data auto-refreshed daily
       </footer>
     </main>
   );

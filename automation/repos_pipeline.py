@@ -1,5 +1,5 @@
 """
-News_Pond — Trending repositories pipeline
+Newsfall — Trending repositories pipeline
 ==========================================
 
 Notable open-source repos worth learning from or contributing to, from the official

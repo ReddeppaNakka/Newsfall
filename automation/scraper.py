@@ -1,5 +1,5 @@
 """
-News_Pond — Automation entry point
+Newsfall — Automation entry point
 ==================================
 
 Run by GitHub Actions daily (and locally). Orchestrates two pipelines:

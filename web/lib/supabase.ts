@@ -201,7 +201,7 @@ const useMock = !supabaseUrl || !supabaseAnonKey;
 if (useMock && typeof window === "undefined") {
   // Server-side log so it's obvious why data looks canned during a preview run.
   console.warn(
-    "[News_Pond] No Supabase env vars set — running in PREVIEW MODE with mock data. " +
+    "[Newsfall] No Supabase env vars set — running in PREVIEW MODE with mock data. " +
       "Add NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY to use a real database."
   );
 }

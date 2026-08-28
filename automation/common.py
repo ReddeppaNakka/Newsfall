@@ -1,5 +1,5 @@
 """
-News_Pond automation — shared helpers
+Newsfall automation — shared helpers
 =====================================
 
 Env loading, the Supabase client, and a single OpenAI-compatible LLM call used by
