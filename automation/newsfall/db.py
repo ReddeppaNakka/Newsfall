@@ -6,19 +6,48 @@ stage modules free of PostgREST quirks (chunked upserts, safe selects, vector I/
 from __future__ import annotations
 
 import os
+import time
 from typing import Any, Iterable, Sequence
 
+import httpx
+from postgrest._sync import request_builder as _postgrest_rb
 from supabase import Client, create_client
+from supabase.lib.client_options import SyncClientOptions
 
 from .log import get_logger
 
 log = get_logger("db")
 
+# Healthy requests answer in <1 s; anything longer is a hung connection, so fail fast and retry.
+DB_TIMEOUT_SECONDS = int(os.getenv("SUPABASE_TIMEOUT_SECONDS", "12"))
+DB_RETRIES = 4
+
+# PostgREST occasionally leaves a stale keep-alive connection hanging on the first
+# request after an idle period (observed as 120 s read timeouts on otherwise sub-second
+# writes). Retry transport-level failures with a short timeout; every pipeline write is
+# idempotent (upserts / unique keys), so a retried request can never duplicate data.
+_original_send_with_retry = _postgrest_rb.send_with_retry
+
+
+def _resilient_send(req):  # type: ignore[no-untyped-def]
+    for attempt in range(DB_RETRIES + 1):
+        try:
+            return _original_send_with_retry(req)
+        except (httpx.TimeoutException, httpx.ConnectError, httpx.RemoteProtocolError) as exc:
+            if attempt >= DB_RETRIES:
+                raise
+            log.warning("db request failed — retrying", error=type(exc).__name__, attempt=attempt + 1)
+            time.sleep(1 + attempt)
+    raise RuntimeError("unreachable")
+
+
+_postgrest_rb.send_with_retry = _resilient_send
+
 
 def get_db() -> Client:
     url = os.environ["SUPABASE_URL"]
     key = os.environ["SUPABASE_SERVICE_KEY"]
-    return create_client(url, key)
+    return create_client(url, key, options=SyncClientOptions(postgrest_client_timeout=DB_TIMEOUT_SECONDS))
 
 
 def chunked(items: Sequence[Any], size: int = 200) -> Iterable[Sequence[Any]]:
@@ -84,11 +113,16 @@ def set_article_status(db: Client, article_id: str, status: str, error: str | No
     db.table("raw_articles").update(patch).eq("id", article_id).execute()
 
 
-def record_pipeline_run(db: Client, run_id: str | None, *, status: str, stats: dict, error: str | None = None) -> str:
-    if run_id is None:
-        res = db.table("pipeline_runs").insert({"status": status, "stats": stats}).execute()
-        return res.data[0]["id"]
-    db.table("pipeline_runs").update(
-        {"status": status, "stats": stats, "error": error, "finished_at": "now()"}
-    ).eq("id", run_id).execute()
-    return run_id
+def record_pipeline_run(db: Client, run_id: str | None, *, status: str, stats: dict, error: str | None = None) -> str | None:
+    """Best-effort run bookkeeping — observability must never abort the pipeline."""
+    try:
+        if run_id is None:
+            res = db.table("pipeline_runs").insert({"status": status, "stats": stats}).execute()
+            return res.data[0]["id"]
+        db.table("pipeline_runs").update(
+            {"status": status, "stats": stats, "error": error, "finished_at": "now()"}
+        ).eq("id", run_id).execute()
+        return run_id
+    except Exception as exc:  # noqa: BLE001
+        log.warning("pipeline_runs write failed", error=str(exc)[:200])
+        return run_id

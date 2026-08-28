@@ -32,7 +32,7 @@ def _known_urls(db) -> set[str]:
         start += page
 
 
-def run_ingestion(db, cfg: PipelineConfig) -> dict:
+def run_ingestion(db, cfg: PipelineConfig, llm=None) -> dict:
     stats = {"sources": 0, "fetched": 0, "new": 0, "skipped_old": 0, "failed_sources": 0}
     sync_sources(db)
 

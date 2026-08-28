@@ -16,6 +16,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from ..config import PipelineConfig
+from ..db import upsert
 from ..log import get_logger
 from ..text import content_hash, excerpt, normalize_whitespace, title_similarity
 
@@ -54,11 +55,15 @@ def run_normalize(db, cfg: PipelineConfig, llm=None) -> dict:
     recent = _recent_titles(db, days=3)
     seen_hashes: dict[str, str] = {r["content_hash"]: r["id"] for r in recent if r.get("content_hash")}
 
+    # Decide everything in memory, then write in batches (one round-trip per ~100 rows
+    # instead of one per article — the DB link, not CPU, is the bottleneck).
+    patches: list[dict] = []
     for art in pending:
         content = normalize_whitespace(art.get("content") or "")
         title = normalize_whitespace(art.get("title") or "")
+        base = {"id": art["id"], "url": art["url"], "title": title[:300] or art["title"]}
         if len(content) < cfg.min_content_chars and len(title) < 20:
-            db.table("raw_articles").update({"ingestion_status": "SKIPPED", "error": "too little content"}).eq("id", art["id"]).execute()
+            patches.append({**base, "ingestion_status": "SKIPPED", "error": "too little content"})
             stats["skipped"] += 1
             continue
 
@@ -66,17 +71,19 @@ def run_normalize(db, cfg: PipelineConfig, llm=None) -> dict:
         art["content_hash"] = h
         dup_of = decide_duplicate(art, seen_hashes, recent, cfg.title_similarity_dup)
         if dup_of:
-            db.table("raw_articles").update({"ingestion_status": "DUPLICATE", "duplicate_of": dup_of, "content_hash": h}).eq("id", art["id"]).execute()
+            patches.append({**base, "ingestion_status": "DUPLICATE", "duplicate_of": dup_of, "content_hash": h})
             stats["duplicates"] += 1
             continue
 
-        db.table("raw_articles").update({
-            "ingestion_status": "NORMALIZED", "content": content[: cfg.max_content_chars] or None,
-            "title": title[:300], "summary": excerpt(content) if content else None, "content_hash": h, "error": None,
-        }).eq("id", art["id"]).execute()
+        patches.append({
+            **base, "ingestion_status": "NORMALIZED", "content": content[: cfg.max_content_chars] or None,
+            "summary": excerpt(content) if content else None, "content_hash": h, "error": None,
+        })
         seen_hashes[h] = art["id"]
         recent.append({"id": art["id"], "title": title, "source_id": art.get("source_id"), "content_hash": h})
         stats["normalized"] += 1
 
+    # Upsert on the primary key acts as a batched UPDATE (url is included because it is NOT NULL).
+    upsert(db, "raw_articles", patches, on_conflict="id")
     log.info("normalize complete", **stats)
     return stats

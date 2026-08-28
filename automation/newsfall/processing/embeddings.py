@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from ..config import PipelineConfig
-from ..db import pg_to_vec, vec_to_pg
+from ..db import pg_to_vec, upsert, vec_to_pg
 from ..llm import LLMService
 from ..log import get_logger
 from ..text import cosine
@@ -22,7 +22,7 @@ def embedding_text(title: str, content: str | None) -> str:
 
 def run_embeddings(db, cfg: PipelineConfig, llm: LLMService) -> dict:
     stats = {"embedded": 0, "semantic_duplicates": 0, "model": None}
-    rows = (db.table("raw_articles").select("id,title,content,source_id,published_at")
+    rows = (db.table("raw_articles").select("id,title,url,content,source_id,published_at")
             .eq("ingestion_status", "NORMALIZED").is_("embedding", "null")
             .limit(cfg.max_articles_per_run).execute().data or [])
     if not rows:
@@ -38,20 +38,22 @@ def run_embeddings(db, cfg: PipelineConfig, llm: LLMService) -> dict:
     recent_vecs = [(r["id"], pg_to_vec(r["embedding"])) for r in recent]
     recent_vecs = [(i, v) for i, v in recent_vecs if v]
 
+    patches: list[dict] = []
     for row, vec in zip(rows, vectors):
         dup_of = None
         for other_id, other_vec in recent_vecs:
             if other_id != row["id"] and cosine(vec, other_vec) >= cfg.embedding_similarity_dup:
                 dup_of = other_id
                 break
-        patch = {"embedding": vec_to_pg(vec), "embedding_model": model}
+        patch = {"id": row["id"], "url": row["url"], "title": row["title"], "embedding": vec_to_pg(vec), "embedding_model": model}
         if dup_of:
             patch.update({"ingestion_status": "DUPLICATE", "duplicate_of": dup_of})
             stats["semantic_duplicates"] += 1
         else:
             recent_vecs.append((row["id"], vec))
             stats["embedded"] += 1
-        db.table("raw_articles").update(patch).eq("id", row["id"]).execute()
+        patches.append(patch)
 
+    upsert(db, "raw_articles", patches, on_conflict="id")  # batched update (see normalize.py)
     log.info("embeddings complete", **stats)
     return stats
