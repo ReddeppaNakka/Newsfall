@@ -23,18 +23,47 @@ async function rpc<T>(name: Rpc, args: Record<string, unknown>): Promise<T[]> {
   }
 }
 
+const STOPWORDS = new Set(["the", "a", "an", "is", "are", "was", "were", "be", "of", "in", "on", "at", "to", "for", "and", "or",
+  "what", "which", "who", "how", "why", "when", "does", "do", "did", "has", "have", "with", "about", "this", "that", "recent",
+  "recently", "latest", "new", "biggest", "major", "between", "its", "their", "there", "into"]);
+
+/** Significant query terms for lexical matching (drops stopwords, keeps ≥2-char tokens). */
+export function queryTerms(q: string): string[] {
+  const toks = (q.toLowerCase().match(/[a-z0-9][a-z0-9.+-]*/g) ?? []) as string[];
+  return [...new Set(toks.filter((t) => t.length >= 2 && !STOPWORDS.has(t)))].slice(0, 8);
+}
+
+function termScore(text: string, terms: string[]): number {
+  const hay = text.toLowerCase();
+  const hits = terms.filter((t) => hay.includes(t)).length;
+  return terms.length ? hits / terms.length : 0;
+}
+
+/** Per-term ilike OR across the main text columns, ranked by fraction of terms matched. */
 async function lexical(q: string): Promise<SearchHit[]> {
-  const like = `%${q.replace(/[%_]/g, " ").trim()}%`;
+  const terms = queryTerms(q);
+  if (!terms.length) return [];
+  const safe = (t: string) => t.replace(/[%_,()]/g, "");
+  const orFor = (cols: string[]) => cols.flatMap((c) => terms.map((t) => `${c}.ilike.%${safe(t)}%`)).join(",");
   const out: SearchHit[] = [];
   try {
     const [ev, en, ar] = await Promise.all([
-      supabase.from("events").select("id,slug,title,why_it_matters,summary,importance_score,confidence_score").ilike("title", like).order("importance_score", { ascending: false }).limit(8),
-      supabase.from("entities").select("id,slug,name,entity_type,description,influence_score").ilike("name", like).order("influence_score", { ascending: false }).limit(8),
-      supabase.from("articles_public").select("id,title,url,summary,source_name,published_at").ilike("title", like).order("published_at", { ascending: false }).limit(8),
+      supabase.from("events").select("id,slug,title,why_it_matters,summary,importance_score,confidence_score,event_type").or(orFor(["title", "summary"])).order("importance_score", { ascending: false }).limit(30),
+      supabase.from("entities").select("id,slug,name,entity_type,description,influence_score,aliases").or(orFor(["name"])).order("influence_score", { ascending: false }).limit(20),
+      supabase.from("articles_public").select("id,title,url,summary,source_name,published_at").or(orFor(["title"])).order("published_at", { ascending: false }).limit(30),
     ]);
-    for (const e of ev.data ?? []) out.push({ kind: "event", id: e.id, title: e.title, href: `/events/${e.slug}`, snippet: e.why_it_matters ?? e.summary, score: 0.5, meta: { importance: e.importance_score, confidence: e.confidence_score, slug: e.slug } });
-    for (const e of en.data ?? []) out.push({ kind: "entity", id: e.id, title: e.name, href: `/entities/${e.slug}`, snippet: e.description, score: 0.5, meta: { type: e.entity_type, influence: e.influence_score } });
-    for (const a of ar.data ?? []) out.push({ kind: "article", id: a.id, title: a.title, href: a.url, snippet: a.summary, score: 0.45, meta: { source: a.source_name, published_at: a.published_at } });
+    for (const e of ev.data ?? []) {
+      const s = termScore(`${e.title} ${e.summary ?? ""}`, terms);
+      if (s > 0) out.push({ kind: "event", id: e.id, title: e.title, href: `/events/${e.slug}`, snippet: e.why_it_matters ?? e.summary, score: 0.3 + 0.5 * s, meta: { importance: e.importance_score, confidence: e.confidence_score, slug: e.slug, type: e.event_type } });
+    }
+    for (const e of en.data ?? []) {
+      const s = termScore(`${e.name} ${(e.aliases ?? []).join(" ")}`, terms);
+      if (s > 0) out.push({ kind: "entity", id: e.id, title: e.name, href: `/entities/${e.slug}`, snippet: e.description, score: 0.3 + 0.5 * s, meta: { type: e.entity_type, influence: e.influence_score } });
+    }
+    for (const a of ar.data ?? []) {
+      const s = termScore(a.title, terms);
+      if (s > 0) out.push({ kind: "article", id: a.id, title: a.title, href: a.url, snippet: a.summary, score: 0.25 + 0.5 * s, meta: { source: a.source_name, published_at: a.published_at } });
+    }
   } catch {
     /* preview mode / missing tables */
   }
