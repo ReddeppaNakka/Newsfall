@@ -61,24 +61,26 @@ def run_normalize(db, cfg: PipelineConfig, llm=None) -> dict:
     for art in pending:
         content = normalize_whitespace(art.get("content") or "")
         title = normalize_whitespace(art.get("title") or "")
-        base = {"id": art["id"], "url": art["url"], "title": title[:300] or art["title"]}
+        # Uniform key set per row — PostgREST bulk upserts send NULL for keys a row omits.
+        h = content_hash(title, content)
+        base = {
+            "id": art["id"], "url": art["url"], "title": title[:300] or art["title"],
+            "content": content[: cfg.max_content_chars] or None, "summary": excerpt(content) if content else None,
+            "content_hash": h, "duplicate_of": None, "error": None,
+        }
         if len(content) < cfg.min_content_chars and len(title) < 20:
             patches.append({**base, "ingestion_status": "SKIPPED", "error": "too little content"})
             stats["skipped"] += 1
             continue
 
-        h = content_hash(title, content)
         art["content_hash"] = h
         dup_of = decide_duplicate(art, seen_hashes, recent, cfg.title_similarity_dup)
         if dup_of:
-            patches.append({**base, "ingestion_status": "DUPLICATE", "duplicate_of": dup_of, "content_hash": h})
+            patches.append({**base, "ingestion_status": "DUPLICATE", "duplicate_of": dup_of})
             stats["duplicates"] += 1
             continue
 
-        patches.append({
-            **base, "ingestion_status": "NORMALIZED", "content": content[: cfg.max_content_chars] or None,
-            "summary": excerpt(content) if content else None, "content_hash": h, "error": None,
-        })
+        patches.append({**base, "ingestion_status": "NORMALIZED"})
         seen_hashes[h] = art["id"]
         recent.append({"id": art["id"], "title": title, "source_id": art.get("source_id"), "content_hash": h})
         stats["normalized"] += 1

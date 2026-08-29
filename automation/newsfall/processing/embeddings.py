@@ -45,7 +45,9 @@ def run_embeddings(db, cfg: PipelineConfig, llm: LLMService) -> dict:
             if other_id != row["id"] and cosine(vec, other_vec) >= cfg.embedding_similarity_dup:
                 dup_of = other_id
                 break
-        patch = {"id": row["id"], "url": row["url"], "title": row["title"], "embedding": vec_to_pg(vec), "embedding_model": model}
+        # Every row carries the same keys: PostgREST bulk upserts send NULL for keys a row omits.
+        patch = {"id": row["id"], "url": row["url"], "title": row["title"], "embedding": vec_to_pg(vec),
+                 "embedding_model": model, "ingestion_status": "NORMALIZED", "duplicate_of": None}
         if dup_of:
             patch.update({"ingestion_status": "DUPLICATE", "duplicate_of": dup_of})
             stats["semantic_duplicates"] += 1
