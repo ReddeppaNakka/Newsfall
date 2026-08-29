@@ -128,28 +128,30 @@ def run_entity_extraction(db, cfg: PipelineConfig, llm: LLMService) -> dict:
 
     resolver = EntityResolver(db)
     for art in rows:
-        if llm.budget_left() < 2:
+        if llm.budget_left() < 1:
             log.warning("LLM budget low — stopping entity extraction", processed=stats["processed"])
             break
         src = art.get("sources") or {}
         content = art.get("content") or ""
         try:
-            cls = llm.classify_article(art["title"], content, src.get("name") or "unknown")
-            ext = llm.extract_entities(art["title"], content)
+            # One call returns entities AND the classification signals (event type/title/magnitude).
+            ext = llm.extract_entities(art["title"], content, src.get("name") or "unknown")
         except Exception as exc:  # noqa: BLE001 — one bad article never stops the run
             log.error("extraction crashed", article=art["id"], error=str(exc)[:200])
             db.table("raw_articles").update({"ingestion_status": "FAILED", "error": str(exc)[:300]}).eq("id", art["id"]).execute()
             stats["failed"] += 1
             continue
 
-        if ext is None and cls is None:
+        if ext is None:
             db.table("raw_articles").update({"ingestion_status": "FAILED", "error": "llm unavailable"}).eq("id", art["id"]).execute()
             stats["failed"] += 1
             continue
 
         meta = dict(art.get("metadata") or {})
-        if cls:
-            meta["classification"] = cls.model_dump()
+        meta["classification"] = {
+            "is_event": ext.is_event, "event_type": ext.event_type,
+            "event_title": (ext.event_title or art["title"])[:140], "magnitude": ext.magnitude,
+        }
         if ext and not ext.is_relevant:
             db.table("raw_articles").update({"ingestion_status": "SKIPPED", "metadata": meta,
                                              "error": f"irrelevant: {ext.relevance_reason or ''}"[:200]}).eq("id", art["id"]).execute()

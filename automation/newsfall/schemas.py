@@ -61,9 +61,20 @@ class ExtractedEntity(BaseModel):
 
 
 class EntityExtraction(BaseModel):
+    """Entities + the cheap classification signals, in ONE call (saves a call per article)."""
+
     entities: list[ExtractedEntity] = Field(default_factory=list)
     is_relevant: bool = True          # False → not about technology/industry/influence at all
     relevance_reason: str | None = None
+    is_event: bool = True             # False for tutorials, opinion, listicles, evergreen explainers
+    event_type: EventType = "OTHER"
+    event_title: str | None = Field(default=None, max_length=140)
+    magnitude: float = 0.3            # 0..1 significance of the development on its own
+
+    @field_validator("magnitude")
+    @classmethod
+    def _m(cls, v: float) -> float:
+        return _clamp01(v)
 
 
 class ExtractedClaim(BaseModel):

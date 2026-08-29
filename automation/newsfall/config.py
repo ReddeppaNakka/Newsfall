@@ -73,9 +73,11 @@ def load_llm_config() -> LLMConfig:
 
     if openrouter_key:
         provider, key, base = "openrouter", openrouter_key, OPENROUTER_BASE_URL
-        fast_default = "google/gemini-2.5-flash"
-        reasoning_default = "anthropic/claude-sonnet-4.5"
-        premium_default = "anthropic/claude-opus-4.1"
+        # Cost-tuned defaults (per 1M tokens in/out): flash-lite ≈ $0.10/$0.40, flash ≈ $0.30/$2.50,
+        # sonnet ≈ $3/$15. Premium is only used for events scoring ≥ INTEL_PREMIUM_MIN_IMPORTANCE.
+        fast_default = "google/gemini-2.5-flash-lite"
+        reasoning_default = "google/gemini-2.5-flash"
+        premium_default = "anthropic/claude-sonnet-4.5"
     else:
         provider, key, base = "openai-compatible", legacy_key, legacy_base
         fast_default = reasoning_default = premium_default = legacy_model
@@ -123,8 +125,8 @@ class PipelineConfig:
 
     # Analysis routing by importance
     premium_analysis_min_importance: float = _float("INTEL_PREMIUM_MIN_IMPORTANCE", 80)
-    analysis_min_importance: float = _float("INTEL_ANALYSIS_MIN_IMPORTANCE", 25)
-    max_events_analyzed_per_run: int = _int("INTEL_MAX_EVENTS_ANALYZED", 40)
+    analysis_min_importance: float = _float("INTEL_ANALYSIS_MIN_IMPORTANCE", 40)
+    max_events_analyzed_per_run: int = _int("INTEL_MAX_EVENTS_ANALYZED", 20)
 
     # Reports
     daily_briefing: bool = _bool("INTEL_DAILY_BRIEFING", True)

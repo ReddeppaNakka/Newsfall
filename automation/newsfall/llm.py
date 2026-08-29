@@ -252,30 +252,35 @@ class LLMService:
             max_tokens=300,
         )
 
-    def extract_entities(self, title: str, content: str) -> S.EntityExtraction | None:
+    def extract_entities(self, title: str, content: str, source_name: str = "unknown") -> S.EntityExtraction | None:
+        """Entities AND classification (event type / title / magnitude / is_event) in one call."""
         return self.structured(
             "extract_entities", S.EntityExtraction, self._EDITOR,
-            "Extract the named entities that matter: people who can materially influence technology/industry/"
+            "1) Extract the named entities that matter: people who can materially influence technology/industry/"
             "capital/policy, companies, startups, investors/funds, research labs, governments/regulators, "
-            "products, and technologies (models, chips, frameworks). Use canonical names (\"NVIDIA\", not \"Nvidia's\"). "
-            "Include ticker or short-form aliases you are confident about. mention_type: SUBJECT = the item is "
-            "about them, ACTOR = they did something, TARGET = something was done to them, else MENTIONED. "
-            "Skip generic terms (\"AI\", \"the cloud\"). Max 12 entities. Set is_relevant=false if the item is "
-            "not about technology, industry, research, or influential people at all.\n\n"
-            f"Title: {title}\nContent: {content[:4000]}",
-            max_tokens=900,
+            "products, and technologies (models, chips, frameworks). Canonical names (\"NVIDIA\", not \"Nvidia's\"); "
+            "include ticker/short-form aliases you are confident about. mention_type: SUBJECT = the item is about "
+            "them, ACTOR = they did something, TARGET = something was done to them, else MENTIONED. Skip generic "
+            "terms (\"AI\"). Max 10 entities; omit `context`.\n"
+            "2) Classify: is_relevant=false if not about technology/industry/research/influential people. "
+            "is_event=true only for something that happened or is developing (launch, release, funding, "
+            "acquisition, regulation, research result, incident, leadership change…), false for tutorials, "
+            "listicles, opinion, explainers. magnitude = significance for the industry on its own (0.1 minor "
+            "patch … 0.9 industry-shaping). event_title = neutral, specific headline naming the actors.\n\n"
+            f"Source: {source_name}\nTitle: {title}\nContent: {content[:3000]}",
+            max_tokens=700,
         )
 
     def extract_claims(self, title: str, content: str, source_name: str, source_type: str) -> S.ClaimExtraction | None:
         return self.structured(
             "extract_claims", S.ClaimExtraction, self._EDITOR,
-            "Extract the distinct, checkable claims this item makes (max 8). Each claim is one atomic statement "
-            "with named subject/object entities where applicable. claim_type: FACT = stated by a primary/official "
-            "source as done; REPORTED = a news report attributing to sources; RUMOR = unnamed sources / 'reportedly' / "
-            "'considering'; OPINION = analyst/author view; PREDICTION = forward-looking. Quote the supporting "
-            "sentence fragment in source_context. Never merge two claims into one.\n\n"
-            f"Source: {source_name} (type: {source_type})\nTitle: {title}\nContent: {content[:4500]}",
-            max_tokens=1100,
+            "Extract the distinct, checkable claims this item makes (max 5, most consequential first). Each claim is "
+            "one atomic statement with named subject/object entities where applicable. claim_type: FACT = stated by "
+            "a primary/official source as done; REPORTED = a news report attributing to sources; RUMOR = unnamed "
+            "sources / 'reportedly' / 'considering'; OPINION = analyst/author view; PREDICTION = forward-looking. "
+            "source_context = the supporting sentence fragment (≤ 25 words). Never merge two claims into one.\n\n"
+            f"Source: {source_name} (type: {source_type})\nTitle: {title}\nContent: {content[:3200]}",
+            max_tokens=650,
         )
 
     def cluster_verify(self, candidate_title: str, candidate_summary: str, event_title: str,
@@ -303,10 +308,10 @@ class LLMService:
                       claims: list[dict], premium: bool = False) -> S.EventAnalysis | None:
         art_text = "\n\n".join(
             f"[{i+1}] {a.get('source_name','?')} ({a.get('source_type','?')}, credibility {a.get('credibility',0):.2f}) "
-            f"— {a.get('title','')}\n{(a.get('content') or '')[:1800]}"
-            for i, a in enumerate(articles[:6])
+            f"— {a.get('title','')}\n{(a.get('content') or '')[:1200 if premium else 900]}"
+            for i, a in enumerate(articles[: 5 if premium else 4])
         )
-        claim_text = "\n".join(f"- [{c.get('status')}] {c.get('claim_text')}" for c in claims[:12]) or "none extracted"
+        claim_text = "\n".join(f"- [{c.get('status')}] {c.get('claim_text')}" for c in claims[:8]) or "none extracted"
         return self.structured(
             "analyze_event_major" if premium else "analyze_event", S.EventAnalysis, self._EDITOR,
             "Produce an intelligence analysis of this event from the evidence below ONLY. Be concrete and "
@@ -316,10 +321,11 @@ class LLMService:
             "(e.g. ACQUIRED, INVESTED_IN, PARTNERED_WITH, CEO_OF). `what_to_watch`: unresolved questions with a "
             "kind (UPCOMING_KNOWN_EVENT / EMERGING_SIGNAL / SPECULATIVE_POSSIBILITY). `scenarios`: 1–3 evidence-"
             "based possible next developments with supporting and counter signals — clearly not facts. "
-            "List genuine `uncertainties`. Do not restate unconfirmed claims as facts.\n\n"
+            "List genuine `uncertainties`. Do not restate unconfirmed claims as facts. Be concise: summary/"
+            "why_it_matters/industry_impact ≤ 3 sentences each; ≤ 3 what_to_watch; ≤ 2 scenarios.\n\n"
             f"EVENT: {title} ({event_type})\nENTITIES: {', '.join(entities) or 'n/a'}\n\nCLAIMS:\n{claim_text}\n\n"
             f"EVIDENCE:\n{art_text}",
-            max_tokens=2000 if premium else 1500,
+            max_tokens=1400 if premium else 1000,
         )
 
     def daily_briefing(self, day: str, events: list[dict], people: list[dict], watch: list[dict]) -> S.DailyBriefing | None:
