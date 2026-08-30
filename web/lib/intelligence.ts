@@ -14,13 +14,20 @@ import type {
 } from "./intelligence-types";
 
 async function safe<T>(fn: () => PromiseLike<{ data: unknown; error: unknown }>, fallback: T): Promise<T> {
-  try {
-    const { data, error } = await fn();
-    if (error) return fallback;
-    return (data ?? fallback) as T;
-  } catch {
-    return fallback;
+  // One retry for transient failures (network hiccups / PostgREST timeouts) so a blip never
+  // renders — and gets ISR-cached as — an empty homepage. Schema errors still fail soft immediately.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const { data, error } = await fn();
+      if (!error) return (data ?? fallback) as T;
+      const code = (error as { code?: string })?.code ?? "";
+      if (code.startsWith("42") || code.startsWith("PGRST")) return fallback; // missing table/column: don't retry
+    } catch {
+      /* network error → retry once */
+    }
+    if (attempt === 0) await new Promise((r) => setTimeout(r, 400));
   }
+  return fallback;
 }
 
 // "*" rather than an explicit list so optional columns added by later migrations
