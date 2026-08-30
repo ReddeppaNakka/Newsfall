@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Newsreader } from "next/font/google";
+import { Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-// Editorial serif for intelligence headlines (cards, event hero).
-const newsreader = Newsreader({ subsets: ["latin"], variable: "--font-serif", weight: ["400", "500", "600"], style: ["normal"] });
+// High-contrast editorial serif for the big story and headline typography.
+const serif = Instrument_Serif({ subsets: ["latin"], variable: "--font-serif", weight: "400", style: ["normal", "italic"] });
 
 export const metadata: Metadata = {
   title: "Newsfall — Technology Intelligence",
@@ -21,7 +21,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#08080c",
+  themeColor: "#07080b",
 };
 
 export default function RootLayout({
@@ -31,14 +31,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} ${newsreader.variable} font-sans antialiased`}>
-        {/* A single, very faint ambient wash — enough depth to avoid a flat black page,
-            restrained enough to read as editorial rather than "AI dashboard". */}
-        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-          <div className="absolute -top-40 left-1/3 h-72 w-72 rounded-full bg-violet-500/[0.06] blur-[90px] sm:h-[28rem] sm:w-[28rem] sm:blur-[140px]" />
-        </div>
+      <body className={`${inter.variable} ${serif.variable} font-sans antialiased`}>
         <Sidebar />
-        <div className="px-safe md:pl-60">{children}</div>
+        <div className="px-safe md:pl-[72px]">{children}</div>
       </body>
     </html>
   );

@@ -1,244 +1,80 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { supabase } from "@/lib/supabase";
-import type { Technology, Opportunity, Job, LearningResource, Repo } from "@/lib/types";
-import Hero from "@/components/Hero";
-import Highlights from "@/components/Highlights";
-import TechExplorer from "@/components/TechExplorer";
-import HotTopicsFeed from "@/components/HotTopicsFeed";
-import OpportunityCard from "@/components/OpportunityCard";
-import JobCard from "@/components/JobCard";
-import LearningCard from "@/components/LearningCard";
-import RepoCard from "@/components/RepoCard";
+import { getHomepageData } from "@/lib/intelligence";
+import NewsfallHeader from "@/components/home/NewsfallHeader";
+import BigStory from "@/components/home/BigStory";
+import StoryRail from "@/components/home/StoryRail";
+import SignalList from "@/components/home/SignalList";
+import WatchNext from "@/components/home/WatchNext";
+import EntityFocus from "@/components/home/EntityFocus";
 import TopicModal from "@/components/TopicModal";
-import TopIntelligence from "@/components/intel/TopIntelligence";
-import { listRankedEvents, listWatchItems } from "@/lib/intelligence";
 
 /**
- * Homepage — fully dynamic, server-rendered from Supabase.
+ * Homepage — "The world of technology, already filtered for you."
  *
- * `revalidate = 3600` means Next.js re-fetches at most once an hour (ISR), so the
- * page reflects new scraper data without a redeploy while staying cheap to serve.
+ * Header → The Big Story → While you were away → Signals + What to watch next →
+ * Entities in focus → footer. Every section is selected from the intelligence layer
+ * (ranked by importance, confidence, corroboration and recency — never by publish
+ * time alone). Server-rendered, ISR 60s, no AI calls at request time.
+ *
+ * The original technology tracker lives at /technologies; the ?topic= popup still
+ * works here so old deep links keep resolving.
  */
 export const revalidate = 60;
 
 export default async function HomePage() {
-  // 1) All technologies for the grid.
-  const { data: techs } = await supabase
-    .from("technologies")
-    .select("*")
-    .order("category", { ascending: true })
-    .order("name", { ascending: true });
-
-  // 2) Latest updates for the hero ticker (embed the parent tech slug so each row
-  //    can open the detail popup instead of the external source link).
-  const { data: latest } = await supabase
-    .from("updates")
-    .select("*, technology:technologies!inner(slug)")
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .limit(4);
-
-  // 3) Hot Topics — recent updates joined with their parent technology.
-  //    Supabase embeds the related row via the FK relationship.
-  const { data: hot } = await supabase
-    .from("updates")
-    .select(
-      "*, technology:technologies!inner(name, slug, accent_color, is_featured)"
-    )
-    .eq("technology.is_featured", true)
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .limit(12);
-
-  // 4) Opportunities preview — featured first, then soonest-closing. Fetch a wider
-  //    slice so that after dropping expired ones we still have enough to show 6.
-  const { data: opps } = await supabase
-    .from("opportunities")
-    .select("*")
-    .order("is_featured", { ascending: false })
-    .order("deadline", { ascending: true, nullsFirst: false })
-    .limit(40);
-
-  // 5) This week's highlights — important, recent updates across all technologies.
-  const { data: recent } = await supabase
-    .from("updates")
-    .select("*, technology:technologies!inner(name, slug, accent_color)")
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .limit(60);
-
-  // 6) Jobs preview — fresher-friendly first, then most recently posted.
-  const { data: jobsData } = await supabase
-    .from("jobs")
-    .select("*")
-    .order("is_fresher", { ascending: false })
-    .order("posted_at", { ascending: false, nullsFirst: false })
-    .limit(6);
-
-  // 7) Learning preview — famous curated ones first, then newest.
-  const { data: learningData } = await supabase
-    .from("learning_resources")
-    .select("*")
-    .order("is_featured", { ascending: false })
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .limit(6);
-
-  // 8) Repos preview — highest-starred trending repos.
-  const { data: reposData } = await supabase
-    .from("repos")
-    .select("*")
-    .order("stars", { ascending: false })
-    .limit(6);
-
-  // 9) Intelligence layer — top verified development + what to watch. All three queries
-  //    degrade to null/[] when migration 001 hasn't been applied (or in preview mode).
-  const [rankedEvents, watchItems] = await Promise.all([listRankedEvents(6), listWatchItems(4)]);
-
-  const technologies = (techs ?? []) as Technology[];
-  // Keep only currently-open opportunities: no deadline (evergreen) or deadline still
-  // in the future. So an important listing stays visible right up until its last date.
-  const now = Date.now();
-  const openOpps = ((opps ?? []) as Opportunity[]).filter(
-    (o) => !o.deadline || new Date(o.deadline).getTime() >= now,
-  );
-  const opportunities = openOpps.slice(0, 6);
-  const jobs = (jobsData ?? []) as Job[];
-  const learning = (learningData ?? []) as LearningResource[];
-  const repos = (reposData ?? []) as Repo[];
-
-  // Important (importance >= 4) updates from the last 7 days, best first. This keeps big
-  // releases pinned for the week instead of sinking under minor news.
-  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-  const highlights = ((recent ?? []) as { importance?: number; published_at: string | null }[])
-    .filter(
-      (u) =>
-        (u.importance ?? 0) >= 4 &&
-        !!u.published_at &&
-        now - new Date(u.published_at).getTime() <= WEEK_MS,
-    )
-    .sort(
-      (a, b) =>
-        (b.importance ?? 0) - (a.importance ?? 0) ||
-        (a.published_at! < b.published_at! ? 1 : -1),
-    )
-    .slice(0, 6);
+  const data = await getHomepageData();
 
   return (
     <main className="min-h-screen">
-      <Hero totalTracked={technologies.length} latest={(latest ?? []) as never} />
-      <TopIntelligence events={rankedEvents} watch={watchItems} />
-      <Highlights items={highlights as never} />
-      <TechExplorer techs={technologies} />
+      <NewsfallHeader />
 
-      {/* Opportunities for freshers — competitions, hackathons, conferences, internships */}
-      {opportunities.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
-          <div className="mb-5 flex items-center justify-between gap-3 sm:mb-6 sm:gap-4">
-            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-              <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-glow-cyan" />
-              <h2 className="text-xl font-semibold tracking-tight text-zinc-100 sm:text-2xl">
-                Opportunities for Freshers
-              </h2>
-            </div>
-            <Link
-              href="/opportunities"
-              className="inline-flex shrink-0 items-center whitespace-nowrap py-2.5 text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
-            >
-              See all →
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-            {opportunities.map((o) => (
-              <OpportunityCard key={o.id} opp={o} />
-            ))}
-          </div>
-        </section>
+      {data.bigStory ? (
+        <BigStory event={data.bigStory} />
+      ) : (
+        <EmptyState />
       )}
 
-      {/* Remote tech jobs — fresher-friendly first */}
-      {jobs.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
-          <div className="mb-5 flex items-center justify-between gap-3 sm:mb-6 sm:gap-4">
-            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-glow-emerald" />
-              <h2 className="text-xl font-semibold tracking-tight text-zinc-100 sm:text-2xl">
-                Remote Tech Jobs
-              </h2>
-            </div>
-            <Link
-              href="/jobs"
-              className="inline-flex shrink-0 items-center whitespace-nowrap py-2.5 text-sm font-medium text-emerald-300 transition hover:text-emerald-200"
-            >
-              See all →
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-            {jobs.map((j) => (
-              <JobCard key={j.id} job={j} />
-            ))}
-          </div>
-        </section>
-      )}
+      <div className="space-y-14 pb-16 pt-6 sm:space-y-16">
+        <StoryRail events={data.whileAway} />
 
-      {/* Learn & get certified — free courses, certifications, talks */}
-      {learning.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
-          <div className="mb-5 flex items-center justify-between gap-3 sm:mb-6 sm:gap-4">
-            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-              <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-glow-cyan" />
-              <h2 className="text-xl font-semibold tracking-tight text-zinc-100 sm:text-2xl">
-                Learn & Get Certified
-              </h2>
-            </div>
-            <Link
-              href="/learn"
-              className="inline-flex shrink-0 items-center whitespace-nowrap py-2.5 text-sm font-medium text-cyan-300 transition hover:text-cyan-200"
-            >
-              See all →
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-            {learning.map((r) => (
-              <LearningCard key={r.id} item={r} />
-            ))}
-          </div>
-        </section>
-      )}
+        {(data.signals.length > 0 || data.watch.length > 0) && (
+          <section className="grid grid-cols-1 gap-4 px-6 sm:px-10 lg:grid-cols-[1.35fr_1fr]">
+            <SignalList events={data.signals} />
+            <WatchNext items={data.watch} />
+          </section>
+        )}
 
-      {/* Trending open-source repos */}
-      {repos.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
-          <div className="mb-5 flex items-center justify-between gap-3 sm:mb-6 sm:gap-4">
-            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-              <span className="h-2 w-2 rounded-full bg-violet-400 shadow-glow-violet" />
-              <h2 className="text-xl font-semibold tracking-tight text-zinc-100 sm:text-2xl">
-                Trending Repositories
-              </h2>
-            </div>
-            <Link
-              href="/repos"
-              className="inline-flex shrink-0 items-center whitespace-nowrap py-2.5 text-sm font-medium text-violet-300 transition hover:text-violet-200"
-            >
-              See all →
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-            {repos.map((r) => (
-              <RepoCard key={r.id} repo={r} />
-            ))}
-          </div>
-        </section>
-      )}
+        <EntityFocus entities={data.entities} />
+      </div>
 
-      {/* `hot` rows carry an embedded `technology` object matching the feed's prop type. */}
-      <HotTopicsFeed items={(hot ?? []) as never} />
-
-      <footer className="border-t border-white/5 px-4 py-10 pb-safe text-center text-xs text-zinc-600 sm:text-sm">
-        Newsfall · open source · data auto-refreshed daily via GitHub Actions
+      <footer className="flex flex-col gap-2 border-t border-white/[0.06] px-6 py-8 text-[12px] text-zinc-600 sm:flex-row sm:items-center sm:justify-between sm:px-10">
+        <span>Newsfall collects, connects, and clarifies what matters in technology.</span>
+        <span className="flex flex-wrap gap-x-4">
+          <span>Evidence first.</span>
+          <span>Signal over noise.</span>
+          <span>Intelligence that compounds.</span>
+        </span>
       </footer>
 
-      {/* Detail popup — opens when the URL has ?topic=<slug> */}
       <Suspense fallback={null}>
         <TopicModal />
       </Suspense>
     </main>
+  );
+}
+
+function EmptyState() {
+  return (
+    <section className="px-6 pb-12 pt-10 sm:px-10 md:pt-16">
+      <p className="flex items-center gap-3 text-[11px] font-semibold tracking-[0.22em] text-violet-300">
+        THE BIG STORY <span className="h-px w-10 bg-violet-300/40" />
+      </p>
+      <h1 className="mt-5 max-w-3xl font-serif text-[2.6rem] leading-[1.05] text-white sm:text-[3.6rem]">The intelligence layer is warming up.</h1>
+      <p className="mt-5 max-w-md text-[15px] leading-relaxed text-zinc-400">
+        No events have been processed yet. Apply <code className="text-zinc-300">supabase/migrations/001</code> and run <code className="text-zinc-300">python -m newsfall.run</code>.
+        Meanwhile the <Link href="/technologies" className="text-zinc-200 underline underline-offset-4">technology tracker</Link> is live.
+      </p>
+    </section>
   );
 }

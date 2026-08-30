@@ -18,7 +18,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        canvas: "#08080c", // near-black slate/zinc-950 canvas
+        canvas: "#07080b", // near-black editorial canvas
+        surface: "#0c0d12", // card / panel surface
+        hairline: "rgba(255,255,255,0.07)",
       },
       fontFamily: {
         sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],

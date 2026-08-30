@@ -5,6 +5,7 @@ source is reported through `FetchResult.error` so the registry can track health.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -100,6 +101,38 @@ def fetch_github_releases(repo: str, *, limit: int, token: str | None = None, ti
             metadata={"tag": rel.get("tag_name"), "prerelease": bool(rel.get("prerelease"))},
         ))
     return FetchResult([i for i in items if i.url])
+
+
+_OG_RE = re.compile(
+    r'<meta[^>]+(?:property|name)=["\'](?:og:image(?::secure_url)?|twitter:image(?::src)?)["\'][^>]*content=["\']([^"\']+)["\']'
+    r'|<meta[^>]+content=["\']([^"\']+)["\'][^>]*(?:property|name)=["\'](?:og:image(?::secure_url)?|twitter:image(?::src)?)["\']',
+    re.IGNORECASE,
+)
+
+
+def fetch_og_image(url: str, *, timeout: int = 8) -> str | None:
+    """Return the page's og:image / twitter:image URL, reading only the first ~120 KB of HTML.
+    Never raises; returns None on any failure or when the page has no social image."""
+    try:
+        with requests.get(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html"}, timeout=timeout, stream=True) as resp:
+            if resp.status_code >= 400 or "html" not in (resp.headers.get("content-type") or ""):
+                return None
+            chunks, size = [], 0
+            for chunk in resp.iter_content(chunk_size=16384):
+                chunks.append(chunk)
+                size += len(chunk)
+                if size >= 120_000 or b"</head>" in chunk:
+                    break
+            head = b"".join(chunks).decode("utf-8", "ignore")
+    except requests.RequestException:
+        return None
+    m = _OG_RE.search(head)
+    if not m:
+        return None
+    img = (m.group(1) or m.group(2) or "").strip()
+    if img.startswith("//"):
+        img = "https:" + img
+    return img if img.startswith("http") and len(img) < 1000 else None
 
 
 def fetch_source(source: dict, *, limit: int, github_token: str | None = None) -> FetchResult:

@@ -48,6 +48,7 @@ class ExtractedEntity(BaseModel):
     mention_type: MentionType = "MENTIONED"
     aliases: list[str] = Field(default_factory=list)
     context: str | None = Field(default=None, max_length=300)
+    official_domain: str | None = Field(default=None, max_length=120)  # e.g. "nvidia.com" when well known
 
     @field_validator("confidence")
     @classmethod
@@ -58,6 +59,12 @@ class ExtractedEntity(BaseModel):
     @classmethod
     def _n(cls, v: str) -> str:
         return v.strip()
+
+
+class EntityDomains(BaseModel):
+    """name → official domain (or null) for a batch of entities."""
+
+    domains: dict[str, str | None] = Field(default_factory=dict)
 
 
 class EntityExtraction(BaseModel):

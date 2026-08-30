@@ -49,7 +49,8 @@ export interface Entity {
   updated_at: string;
 }
 
-export type EntityRef = Pick<Entity, "id" | "slug" | "name" | "entity_type" | "influence_score">;
+export type EntityRef = Pick<Entity, "id" | "slug" | "name" | "entity_type" | "influence_score"> &
+  Partial<Pick<Entity, "official_url" | "image_url">>;
 
 export interface Scenario {
   scenario: string;
@@ -83,6 +84,8 @@ export interface IntelEvent {
   primary_source_confirmed: boolean;
   has_contradiction: boolean;
   analyzed_at: string | null;
+  /** Primary source's og:image (migration 002); optional until backfilled. */
+  image_url?: string | null;
 }
 
 export interface EventWithEntities extends IntelEvent {
@@ -101,6 +104,7 @@ export interface ArticlePublic {
   source_type: string | null;
   credibility_score: number | null;
   is_primary_source: boolean | null;
+  image_url?: string | null;
 }
 
 export interface ClaimEvidence {

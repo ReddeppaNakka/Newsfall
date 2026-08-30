@@ -86,6 +86,7 @@ def _create(db, art: dict, entity_ids: set[str], cls: dict, vec: list[float], mo
         "summary": art.get("summary"), "status": "ACTIVE", "occurred_at": art.get("published_at"),
         "embedding": vec_to_pg(vec), "embedding_model": model,
         "score_breakdown": {"magnitude": cls.get("magnitude", 0.3)},
+        "image_url": (art.get("metadata") or {}).get("image_url"),
     }
     ev = db.table("events").insert(row).execute().data[0]
     upsert(db, "event_articles", [{"event_id": ev["id"], "article_id": art["id"], "similarity": 1.0,

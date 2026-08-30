@@ -16,7 +16,7 @@ from ..db import upsert
 from ..log import get_logger
 from ..sources.registry import sync_sources
 from ..text import canonical_url, content_hash, excerpt, iso, normalize_whitespace
-from .fetchers import fetch_source
+from .fetchers import fetch_og_image, fetch_source
 
 log = get_logger("ingest")
 
@@ -41,6 +41,7 @@ def run_ingestion(db, cfg: PipelineConfig, llm=None) -> dict:
     cutoff = datetime.now(timezone.utc) - timedelta(days=cfg.max_article_age_days)
     github_token = os.getenv("GITHUB_TOKEN")
     now_iso = iso(datetime.now(timezone.utc))
+    images_fetched = 0
 
     for src in sources:
         stats["sources"] += 1
@@ -64,6 +65,12 @@ def run_ingestion(db, cfg: PipelineConfig, llm=None) -> dict:
                 stats["skipped_old"] += 1
                 continue
             content = normalize_whitespace(item.content)[: cfg.max_content_chars]
+            # Real, story-relevant visual for the editorial UI (one small GET per new article).
+            if images_fetched < cfg.max_images_per_run:
+                images_fetched += 1
+                img = fetch_og_image(url)
+                if img:
+                    item.metadata["image_url"] = img
             rows.append({
                 "source_id": src["id"], "title": item.title[:300], "url": url, "canonical_url": url,
                 "author": (item.author or None) and item.author[:120], "content": content or None,

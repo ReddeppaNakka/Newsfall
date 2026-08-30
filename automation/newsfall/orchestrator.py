@@ -17,6 +17,7 @@ from .intelligence import (run_analysis, run_clustering, run_daily_briefing, run
 from .llm import LLMService
 from .log import get_logger
 from .processing import run_claim_extraction, run_embeddings, run_entity_extraction, run_normalize
+from .processing.images import run_images
 
 log = get_logger("orchestrator")
 
@@ -29,6 +30,7 @@ STAGES: list[tuple[str, Stage]] = [
     ("entities", run_entity_extraction),
     ("claims", run_claim_extraction),
     ("cluster", run_clustering),
+    ("images", run_images),
     ("verify", run_verification),
     ("influence", run_influence),
     ("score", run_scoring),
@@ -40,7 +42,7 @@ STAGES: list[tuple[str, Stage]] = [
 GROUPS = {
     "ingest": ["ingest"],
     "process": ["normalize", "embed", "entities", "claims"],
-    "cluster": ["cluster"],
+    "cluster": ["cluster", "images"],
     "verify": ["verify", "influence", "score"],
     "analyze": ["analyze", "watch"],
     "report": ["report"],

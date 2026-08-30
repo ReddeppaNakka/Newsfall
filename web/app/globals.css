@@ -9,7 +9,7 @@
 
 html,
 body {
-  background-color: #08080c; /* canvas */
+  background-color: #07080b; /* canvas */
   color: rgb(228 228 231); /* zinc-200 */
   -webkit-font-smoothing: antialiased;
   /* Stop iOS/Android from re-flowing our type when the phone is rotated. */
@@ -19,22 +19,7 @@ body {
   overflow-x: clip;
 }
 
-/* Faint dotted grid backdrop for depth */
-body {
-  background-image: radial-gradient(
-    circle at 1px 1px,
-    rgba(255, 255, 255, 0.05) 1px,
-    transparent 0
-  );
-  background-size: 28px 28px;
-}
-
-/* Tighter grid on phones so the texture doesn't read as noise at small sizes. */
-@media (max-width: 640px) {
-  body {
-    background-size: 20px 20px;
-  }
-}
+/* Clean near-black canvas — the editorial layout supplies its own depth. */
 
 /* No grey flash box when tapping cards/links on Android Chrome. */
 * {
@@ -85,7 +70,7 @@ a {
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.35);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 9999px;
 }
 

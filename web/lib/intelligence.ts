@@ -23,12 +23,11 @@ async function safe<T>(fn: () => PromiseLike<{ data: unknown; error: unknown }>,
   }
 }
 
-const EVENT_COLS =
-  "id,slug,title,event_type,summary,status,occurred_at,first_seen_at,last_updated_at,importance_score," +
-  "confidence_score,score_breakdown,why_it_matters,industry_impact,intelligence_summary,what_to_watch," +
-  "scenarios,article_count,source_count,independent_source_count,primary_source_confirmed,has_contradiction,analyzed_at";
+// "*" rather than an explicit list so optional columns added by later migrations
+// (e.g. image_url from 002) appear when present and never break the query when absent.
+const EVENT_COLS = "*";
 
-const ENTITY_REF = "id,slug,name,entity_type,influence_score";
+const ENTITY_REF = "id,slug,name,entity_type,influence_score,official_url,image_url";
 
 type EventEntityRow = { role: string; entities: EntityRef | null };
 
@@ -249,6 +248,71 @@ export async function getLatestBriefing(): Promise<IntelligenceReport | null> {
 export async function getEventsBySlugs(slugs: string[]): Promise<Pick<IntelEvent, "slug" | "title" | "importance_score">[]> {
   if (!slugs.length) return [];
   return safe(() => supabase.from("events").select("slug,title,importance_score").in("slug", slugs), []);
+}
+
+/** Daily mention counts per entity over the last `days` days — real trend data for sparklines. */
+export async function getEntitySparklines(entityIds: string[], days = 14): Promise<Record<string, number[]>> {
+  const out: Record<string, number[]> = {};
+  for (const id of entityIds) out[id] = new Array(days).fill(0);
+  if (!entityIds.length) return out;
+  const since = new Date(Date.now() - days * 86400000);
+  const rows = await safe<{ entity_id: string; created_at: string }[]>(
+    () => supabase.from("entity_mentions").select("entity_id,created_at").in("entity_id", entityIds).gte("created_at", since.toISOString()).limit(5000),
+    [],
+  );
+  for (const r of rows) {
+    const day = Math.min(days - 1, Math.max(0, Math.floor((new Date(r.created_at).getTime() - since.getTime()) / 86400000)));
+    if (out[r.entity_id]) out[r.entity_id][day] += 1;
+  }
+  return out;
+}
+
+export interface HomepageData {
+  bigStory: EventWithEntities | null;
+  whileAway: EventWithEntities[];
+  signals: EventWithEntities[];
+  watch: WatchItem[];
+  entities: (Entity & { spark: number[] })[];
+}
+
+/**
+ * Editorial selection for the homepage (Part: The Big Story / While You Were Away).
+ * One ranked pool (importance, confidence, corroboration, recency); the big story is the
+ * top item, "while you were away" prefers the last 72h and never repeats a lead entity,
+ * "signals" are strong but not-yet-corroborated developments.
+ */
+export async function getHomepageData(): Promise<HomepageData> {
+  const [pool, watch, topEntities] = await Promise.all([
+    listRankedEvents(30, 14),
+    listWatchItems(6),
+    listEntities({ limit: 40 }),
+  ]);
+  const bigStory = pool[0] ?? null;
+  const used = new Set<string>(bigStory ? [bigStory.id] : []);
+  const leads = new Set<string>(bigStory?.entities[0] ? [bigStory.entities[0].id] : []);
+  const recentCut = Date.now() - 72 * 3600000;
+
+  const pick = (pred: (e: EventWithEntities) => boolean, n: number) => {
+    const chosen: EventWithEntities[] = [];
+    for (const e of pool) {
+      if (chosen.length >= n) break;
+      if (used.has(e.id) || !pred(e)) continue;
+      const lead = e.entities[0]?.id;
+      if (lead && leads.has(lead)) continue;
+      chosen.push(e);
+      used.add(e.id);
+      if (lead) leads.add(lead);
+    }
+    return chosen;
+  };
+  let whileAway = pick((e) => new Date(e.last_updated_at).getTime() >= recentCut, 4);
+  if (whileAway.length < 4) whileAway = [...whileAway, ...pick(() => true, 4 - whileAway.length)];
+  let signals = pick((e) => e.independent_source_count <= 2 && Number(e.importance_score) >= 35, 3);
+  if (signals.length < 3) signals = [...signals, ...pick(() => true, 3 - signals.length)];
+
+  const focus = topEntities.filter((e) => !["TECHNOLOGY", "PRODUCT", "INDUSTRY"].includes(e.entity_type)).slice(0, 5);
+  const sparks = await getEntitySparklines(focus.map((e) => e.id));
+  return { bigStory, whileAway, signals, watch, entities: focus.map((e) => ({ ...e, spark: sparks[e.id] ?? [] })) };
 }
 
 export async function countEvents(): Promise<number> {

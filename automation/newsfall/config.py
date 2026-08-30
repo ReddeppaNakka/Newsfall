@@ -110,6 +110,7 @@ class PipelineConfig:
     max_articles_per_run: int = _int("INTEL_MAX_ARTICLES_PER_RUN", 120)
     items_per_source: int = _int("INTEL_ITEMS_PER_SOURCE", 15)
     max_article_age_days: int = _int("INTEL_MAX_ARTICLE_AGE_DAYS", 10)
+    max_images_per_run: int = _int("INTEL_MAX_IMAGES_PER_RUN", 150)
     min_content_chars: int = _int("INTEL_MIN_CONTENT_CHARS", 80)
     max_content_chars: int = _int("INTEL_MAX_CONTENT_CHARS", 12000)
 

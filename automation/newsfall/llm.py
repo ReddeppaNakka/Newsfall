@@ -37,6 +37,7 @@ ROUTING: dict[str, Role] = {
     "classify_article": "fast",
     "extract_entities": "fast",
     "extract_claims": "fast",
+    "entity_domains": "fast",
     "cluster_verify": "reasoning",
     "claim_stance": "fast",
     "analyze_event": "reasoning",
@@ -261,7 +262,8 @@ class LLMService:
             "products, and technologies (models, chips, frameworks). Canonical names (\"NVIDIA\", not \"Nvidia's\"); "
             "include ticker/short-form aliases you are confident about. mention_type: SUBJECT = the item is about "
             "them, ACTOR = they did something, TARGET = something was done to them, else MENTIONED. Skip generic "
-            "terms (\"AI\"). Max 10 entities; omit `context`.\n"
+            "terms (\"AI\"). Max 10 entities; omit `context`. Set official_domain (e.g. \"nvidia.com\") only for "
+            "well-known organisations/products whose primary domain you are certain of, else null.\n"
             "2) Classify: is_relevant=false if not about technology/industry/research/influential people. "
             "is_event=true only for something that happened or is developing (launch, release, funding, "
             "acquisition, regulation, research result, incident, leadership change…), false for tutorials, "
@@ -269,6 +271,17 @@ class LLMService:
             "patch … 0.9 industry-shaping). event_title = neutral, specific headline naming the actors.\n\n"
             f"Source: {source_name}\nTitle: {title}\nContent: {content[:3000]}",
             max_tokens=700,
+        )
+
+    def entity_domains(self, names: list[str]) -> S.EntityDomains | None:
+        """Batch lookup of official domains for known organisations (fast model, one call per ~25 names)."""
+        return self.structured(
+            "entity_domains", S.EntityDomains, self._EDITOR,
+            "For each entity name, give its primary official website domain (bare domain, e.g. \"openai.com\", "
+            "\"deepmind.google\") ONLY if you are certain; otherwise null. People: their company's domain is NOT "
+            "acceptable — use null unless they have a well-known personal site. Return {\"domains\": {name: domain|null}} "
+            "with exactly these keys:\n" + "\n".join(f"- {n}" for n in names),
+            max_tokens=600,
         )
 
     def extract_claims(self, title: str, content: str, source_name: str, source_type: str) -> S.ClaimExtraction | None:

@@ -11,6 +11,8 @@ TECHNOLOGY / PRODUCT entities are bridged to the legacy `technologies` table by 
 
 from __future__ import annotations
 
+import re
+
 from ..config import PipelineConfig
 from ..db import upsert
 from ..llm import LLMService
@@ -18,6 +20,40 @@ from ..log import get_logger
 from ..text import alias_key, short_hash, slugify
 
 log = get_logger("entities")
+
+
+_DOMAIN_RE = re.compile(r"^[a-z0-9-]+(\.[a-z0-9-]+)+$")
+
+
+def official_url_from_domain(domain: str | None) -> str | None:
+    """'nvidia.com' → 'https://nvidia.com'; rejects anything that is not a bare hostname."""
+    if not domain:
+        return None
+    d = domain.strip().lower().removeprefix("https://").removeprefix("http://").split("/")[0].removeprefix("www.")
+    return f"https://{d}" if _DOMAIN_RE.match(d) and len(d) <= 100 else None
+
+
+def enrich_entity_domains(db, llm: LLMService, *, limit: int = 100, batch: int = 25) -> int:
+    """Backfill official_url for the most-mentioned entities lacking one (organisations/products only)."""
+    rows = (db.table("entities").select("id,name,entity_type").is_("official_url", "null")
+            .in_("entity_type", ["COMPANY", "STARTUP", "INVESTOR", "FUND", "RESEARCH_LAB", "ORGANIZATION", "GOVERNMENT", "PRODUCT", "TECHNOLOGY"])
+            .order("mention_count", desc=True).limit(limit).execute().data or [])
+    updated = 0
+    for i in range(0, len(rows), batch):
+        chunk = rows[i:i + batch]
+        if llm.budget_left() < 1:
+            break
+        res = llm.entity_domains([r["name"] for r in chunk])
+        if not res:
+            continue
+        by_name = {alias_key(k): v for k, v in res.domains.items()}
+        for r in chunk:
+            url = official_url_from_domain(by_name.get(alias_key(r["name"])))
+            if url:
+                db.table("entities").update({"official_url": url}).eq("id", r["id"]).execute()
+                updated += 1
+    log.info("entity domains enriched", updated=updated, checked=len(rows))
+    return updated
 
 
 class EntityResolver:
@@ -64,7 +100,7 @@ class EntityResolver:
         return None
 
     def get_or_create(self, name: str, entity_type: str, aliases: list[str] | None = None,
-                      description: str | None = None) -> str:
+                      description: str | None = None, official_domain: str | None = None) -> str:
         found = self.resolve(name, aliases)
         if found:
             self._add_aliases(found, [name, *(aliases or [])])
@@ -80,6 +116,7 @@ class EntityResolver:
             "slug": slug, "name": name.strip()[:120], "entity_type": entity_type,
             "aliases": sorted({a.strip() for a in (aliases or []) if a and a.strip() and alias_key(a) != key})[:12],
             "description": description,
+            "official_url": official_url_from_domain(official_domain),
             "technology_id": self.tech_by_key.get(key) if entity_type in ("TECHNOLOGY", "PRODUCT") else None,
         }
         try:
@@ -125,6 +162,9 @@ def run_entity_extraction(db, cfg: PipelineConfig, llm: LLMService) -> dict:
     if not llm.enabled:
         log.warning("no LLM configured — entity extraction skipped")
         return stats
+    if not rows:
+        stats["domains_enriched"] = enrich_entity_domains(db, llm, limit=50)
+        return stats
 
     resolver = EntityResolver(db)
     for art in rows:
@@ -161,7 +201,7 @@ def run_entity_extraction(db, cfg: PipelineConfig, llm: LLMService) -> dict:
         mentions = []
         for ent in (ext.entities if ext else []):
             try:
-                eid = resolver.get_or_create(ent.name, ent.type, ent.aliases)
+                eid = resolver.get_or_create(ent.name, ent.type, ent.aliases, official_domain=ent.official_domain)
             except Exception as exc:  # noqa: BLE001 — one unresolvable entity never aborts the stage
                 log.warning("entity resolution failed", entity=ent.name, error=str(exc)[:200])
                 continue
@@ -174,5 +214,7 @@ def run_entity_extraction(db, cfg: PipelineConfig, llm: LLMService) -> dict:
         db.table("raw_articles").update({"ingestion_status": "ENTITIES_EXTRACTED", "metadata": meta, "error": None}).eq("id", art["id"]).execute()
         stats["processed"] += 1
 
+    # Cheap batch backfill so top entities get real logos in the UI.
+    stats["domains_enriched"] = enrich_entity_domains(db, llm, limit=50)
     log.info("entity extraction complete", **stats)
     return stats
