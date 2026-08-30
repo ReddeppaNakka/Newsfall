@@ -42,11 +42,11 @@ export default function BigStory({ event }: { event: EventWithEntities }) {
         </h1>
         {subtitle && <p className="mt-5 max-w-md text-[15px] leading-relaxed text-zinc-400 sm:text-base">{subtitle}</p>}
 
-        <div className="mt-8 flex items-center gap-7">
+        <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-4 sm:gap-x-7">
           <Metric value={String(importance)} label="IMPORTANCE" ring={importance} />
-          <span className="h-9 w-px bg-white/10" />
+          <span className="hidden h-9 w-px bg-white/10 sm:block" />
           <Metric value={String(sources)} label="SOURCES" />
-          <span className="h-9 w-px bg-white/10" />
+          <span className="hidden h-9 w-px bg-white/10 sm:block" />
           <Metric value={conf} label="CONFIDENCE" icon />
         </div>
 
