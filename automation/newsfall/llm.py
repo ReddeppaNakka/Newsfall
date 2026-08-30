@@ -314,7 +314,10 @@ class LLMService:
         claim_text = "\n".join(f"- [{c.get('status')}] {c.get('claim_text')}" for c in claims[:8]) or "none extracted"
         return self.structured(
             "analyze_event_major" if premium else "analyze_event", S.EventAnalysis, self._EDITOR,
-            "Produce an intelligence analysis of this event from the evidence below ONLY. Be concrete and "
+            "Produce an intelligence analysis of this event from the evidence below ONLY. `event_title` is an "
+            "editorial intelligence headline (≤ 14 words) that states what happened and why it is significant, "
+            "strictly faithful to the evidence — never exaggerate, never add unsupported claims, no clickbait; "
+            "keep the source headline if it is already accurate and specific. Be concrete and "
             "specific; name the mechanism by which it matters (capital, compute, distribution, regulation, "
             "talent, supply chain). `magnitude` = size of the development itself; `industry_impact_score` = "
             "breadth of second-order effects (both 0..1). `relationships` only when the evidence states them "

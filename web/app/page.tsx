@@ -12,7 +12,7 @@ import LearningCard from "@/components/LearningCard";
 import RepoCard from "@/components/RepoCard";
 import TopicModal from "@/components/TopicModal";
 import TopIntelligence from "@/components/intel/TopIntelligence";
-import { getTopEvent, listEvents, listWatchItems } from "@/lib/intelligence";
+import { listRankedEvents, listWatchItems } from "@/lib/intelligence";
 
 /**
  * Homepage — fully dynamic, server-rendered from Supabase.
@@ -90,11 +90,7 @@ export default async function HomePage() {
 
   // 9) Intelligence layer — top verified development + what to watch. All three queries
   //    degrade to null/[] when migration 001 hasn't been applied (or in preview mode).
-  const [topEvent, nextEvents, watchItems] = await Promise.all([
-    getTopEvent(),
-    listEvents({ limit: 3, sinceDays: 7 }),
-    listWatchItems(4),
-  ]);
+  const [rankedEvents, watchItems] = await Promise.all([listRankedEvents(6), listWatchItems(4)]);
 
   const technologies = (techs ?? []) as Technology[];
   // Keep only currently-open opportunities: no deadline (evergreen) or deadline still
@@ -128,11 +124,7 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen">
       <Hero totalTracked={technologies.length} latest={(latest ?? []) as never} />
-      <TopIntelligence
-        top={topEvent}
-        next={nextEvents.filter((e) => e.id !== topEvent?.id)}
-        watch={watchItems}
-      />
+      <TopIntelligence events={rankedEvents} watch={watchItems} />
       <Highlights items={highlights as never} />
       <TechExplorer techs={technologies} />
 

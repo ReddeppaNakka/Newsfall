@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getEventsBySlugs, getLatestBriefing, listEntities, listEvents, listWatchItems } from "@/lib/intelligence";
 import { EVENT_TYPE_LABEL, WATCH_KIND_LABEL, formatDate } from "@/lib/format";
 import EventCard from "@/components/intel/EventCard";
+import IntelligenceCard from "@/components/intel/IntelligenceCard";
+import { rankScore } from "@/lib/category";
 import EntityChip from "@/components/intel/EntityChip";
 import { SectionTitle } from "@/components/intel/Scores";
 import type { EventType } from "@/lib/intelligence-types";
@@ -102,8 +104,12 @@ export default async function IntelligencePage({ searchParams }: { searchParams:
             </section>
           )}
 
-          <Section title="Top intelligence" hint="ranked by importance × confidence">
-            <Grid events={all.slice(0, 6)} />
+          <Section title="Top intelligence" hint="ranked by importance, confidence, corroboration and recency">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[...all].sort((a, b) => rankScore(b) - rankScore(a)).slice(0, 6).map((e, i) => (
+                <IntelligenceCard key={e.id} event={e} hero={i === 0} />
+              ))}
+            </div>
           </Section>
           {tech.length > 0 && <Section title="Technology intelligence"><Grid events={tech} /></Section>}
           {industry.length > 0 && <Section title="Industry intelligence"><Grid events={industry} /></Section>}

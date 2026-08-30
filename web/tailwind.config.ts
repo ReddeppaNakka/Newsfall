@@ -10,10 +10,19 @@ const config: Config = {
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
   ],
+  // Category accent classes in lib/category.ts are composed at runtime — keep them.
+  safelist: [
+    { pattern: /^(text|border|bg)-(amber|orange|violet|emerald|sky|rose|teal|fuchsia|zinc)-(200|300|400)$/ },
+    { pattern: /^(text|border)-(amber|orange|violet|emerald|sky|rose|teal|fuchsia|zinc)-(200|400)\/(25|40|90)$/ },
+  ],
   theme: {
     extend: {
       colors: {
         canvas: "#08080c", // near-black slate/zinc-950 canvas
+      },
+      fontFamily: {
+        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
+        serif: ["var(--font-serif)", "Georgia", "Times New Roman", "serif"],
       },
       boxShadow: {
         // Neon accent glows used on card hover.

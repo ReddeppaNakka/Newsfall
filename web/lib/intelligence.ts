@@ -7,6 +7,7 @@
  */
 import "server-only";
 import { supabase } from "./supabase";
+import { rankScore } from "./category";
 import type {
   ArticlePublic, Claim, Entity, EntityRef, EventWithEntities, IntelEvent, IntelligenceReport,
   Relationship, WatchItem,
@@ -73,6 +74,13 @@ export async function listEvents(f: EventFilters = {}): Promise<EventWithEntitie
   let events = withEntities(rows);
   if (f.entityId) events = events.filter((e) => e.entities.some((x) => x.id === f.entityId));
   return events;
+}
+
+/** Homepage cards: ranked by intelligence value (importance, confidence, corroboration, recency). */
+export async function listRankedEvents(limit = 6, sinceDays = 14): Promise<EventWithEntities[]> {
+  const rows = await listEvents({ limit: 40, sinceDays });
+  const now = Date.now();
+  return rows.sort((a, b) => rankScore(b, now) - rankScore(a, now)).slice(0, limit);
 }
 
 export async function getTopEvent(): Promise<EventWithEntities | null> {

@@ -1,14 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+// Editorial serif for intelligence headlines (cards, event hero).
+const newsreader = Newsreader({ subsets: ["latin"], variable: "--font-serif", weight: ["400", "500", "600"], style: ["normal"] });
 
 export const metadata: Metadata = {
-  title: "Newsfall — Tech & AI Tracker",
+  title: "Newsfall — Technology Intelligence",
   description:
-    "Live tracker for frontier AI models, languages, and frameworks. Auto-updated daily.",
+    "Evidence-driven technology, industry and influence intelligence: what happened, why it matters, who is involved, and how sure we are.",
 };
 
 /**
@@ -29,14 +31,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} font-sans antialiased`}>
-        {/* Ambient neon blobs for premium depth (purely decorative).
-            Smaller radius + cheaper blur on phones — a 120px blur over three
-            384px blobs is a real scroll-jank cost on mid-range mobile GPUs. */}
+      <body className={`${inter.variable} ${newsreader.variable} font-sans antialiased`}>
+        {/* A single, very faint ambient wash — enough depth to avoid a flat black page,
+            restrained enough to read as editorial rather than "AI dashboard". */}
         <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-          <div className="absolute -top-40 left-1/4 h-56 w-56 rounded-full bg-violet-600/20 blur-[70px] animate-pulse-slow sm:h-96 sm:w-96 sm:blur-[120px]" />
-          <div className="absolute top-1/3 right-0 h-56 w-56 rounded-full bg-cyan-500/15 blur-[70px] animate-pulse-slow sm:h-96 sm:w-96 sm:blur-[120px]" />
-          <div className="absolute bottom-0 left-0 h-56 w-56 rounded-full bg-emerald-500/10 blur-[70px] animate-pulse-slow sm:h-96 sm:w-96 sm:blur-[120px]" />
+          <div className="absolute -top-40 left-1/3 h-72 w-72 rounded-full bg-violet-500/[0.06] blur-[90px] sm:h-[28rem] sm:w-[28rem] sm:blur-[140px]" />
         </div>
         <Sidebar />
         <div className="px-safe md:pl-60">{children}</div>
