@@ -35,7 +35,7 @@ export default function StoryCard({ event }: { event: EventWithEntities }) {
         </div>
       </div>
       <div className="flex flex-1 flex-col px-4 pb-4 pt-4">
-        <h3 className="text-[17px] font-medium leading-snug text-zinc-50">{event.title}</h3>
+        <h3 className="line-clamp-3 min-h-[4.7rem] text-[17px] font-medium leading-snug text-zinc-50">{event.title}</h3>
         <div className="mt-auto flex items-center justify-between pt-5">
           <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
             <span className={cat.text}>{cat.label.toUpperCase()}</span>
