@@ -88,7 +88,13 @@ def _create(db, art: dict, entity_ids: set[str], cls: dict, vec: list[float], mo
         "score_breakdown": {"magnitude": cls.get("magnitude", 0.3)},
         "image_url": (art.get("metadata") or {}).get("image_url"),
     }
-    ev = db.table("events").insert(row).execute().data[0]
+    try:
+        ev = db.table("events").insert(row).execute().data[0]
+    except Exception as exc:  # noqa: BLE001 — migration 002 (image_url) not applied yet
+        if "image_url" not in str(exc):
+            raise
+        row.pop("image_url", None)
+        ev = db.table("events").insert(row).execute().data[0]
     upsert(db, "event_articles", [{"event_id": ev["id"], "article_id": art["id"], "similarity": 1.0,
                                    "is_primary": True, "attached_by": "seed"}], on_conflict="event_id,article_id", ignore_duplicates=True)
     upsert(db, "event_entities", [{"event_id": ev["id"], "entity_id": e, "role": "INVOLVED"} for e in entity_ids],
