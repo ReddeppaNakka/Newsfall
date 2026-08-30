@@ -8,8 +8,8 @@ export default function NewsfallHeader() {
     <header className="hidden items-center justify-between gap-6 px-6 pb-2 pt-7 sm:px-10 md:flex">
       <div className="flex min-w-0 items-center gap-6">
         <span className="font-sans text-[22px] font-semibold tracking-[0.32em] text-white">NEWSFALL</span>
-        <span className="h-8 w-px bg-white/10" />
-        <div className="leading-tight">
+        <span className="hidden h-8 w-px bg-white/10 lg:block" />
+        <div className="hidden leading-tight lg:block">
           <p className="text-[11px] font-medium tracking-[0.22em] text-zinc-500">THE WORLD OF TECHNOLOGY</p>
           <p className="text-[11px] font-semibold tracking-[0.22em] text-zinc-200">RIGHT NOW</p>
         </div>
