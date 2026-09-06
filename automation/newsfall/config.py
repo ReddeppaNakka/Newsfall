@@ -13,6 +13,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _str(name: str, default: str) -> str:
+    """Like os.getenv with a default, but an EMPTY value also falls back to the default.
+
+    GitHub Actions injects `${{ vars.X }}` / `${{ secrets.X }}` as "" when X is unset, and
+    an empty model name or base URL is never what anyone wants.
+    """
+    return os.getenv(name) or default
+
+
 def _int(name: str, default: int) -> int:
     try:
         return int(os.getenv(name, default))
@@ -68,8 +77,8 @@ class LLMConfig:
 def load_llm_config() -> LLMConfig:
     openrouter_key = os.getenv("OPENROUTER_API_KEY")
     legacy_key = os.getenv("LLM_API_KEY")
-    legacy_base = os.getenv("LLM_BASE_URL", "https://api.groq.com/openai/v1")
-    legacy_model = os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
+    legacy_base = _str("LLM_BASE_URL", "https://api.groq.com/openai/v1")
+    legacy_model = _str("LLM_MODEL", "openai/gpt-oss-120b")
 
     if openrouter_key:
         provider, key, base = "openrouter", openrouter_key, OPENROUTER_BASE_URL
@@ -89,10 +98,10 @@ def load_llm_config() -> LLMConfig:
         api_key=key,
         base_url=base,
         provider=provider,
-        fast_model=os.getenv("LLM_FAST_MODEL", fast_default),
-        reasoning_model=os.getenv("LLM_REASONING_MODEL", reasoning_default),
-        premium_model=os.getenv("LLM_PREMIUM_MODEL", premium_default),
-        embedding_model=os.getenv("EMBEDDING_MODEL", "openai/text-embedding-3-small"),
+        fast_model=_str("LLM_FAST_MODEL", fast_default),
+        reasoning_model=_str("LLM_REASONING_MODEL", reasoning_default),
+        premium_model=_str("LLM_PREMIUM_MODEL", premium_default),
+        embedding_model=_str("EMBEDDING_MODEL", "openai/text-embedding-3-small"),
         embedding_base_url=emb_base,
         embedding_api_key=emb_key,
         embedding_dim=_int("EMBEDDING_DIM", 1536),
