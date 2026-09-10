@@ -1,53 +1,27 @@
 /**
- * Server-only LLM helper. Calls an OpenAI-compatible chat endpoint (Groq by default)
- * and parses a strict-JSON reply. Never import this into a client component —
- * LLM_API_KEY must never reach the browser (no NEXT_PUBLIC prefix).
+ * Server-only LLM helper used by the topic brief / deep-dive (lib/brief.ts).
+ *
+ * Thin wrapper over the unified gateway in lib/ai.ts, so the brief uses the same
+ * provider as Ask Newsfall: OpenRouter (fast model) when OPENROUTER_API_KEY is set,
+ * otherwise the legacy OpenAI-compatible LLM_* (Groq) config. Previously this file
+ * read only LLM_API_KEY, so with an OpenRouter-only setup every brief came back null.
+ *
+ * Never import this into a client component — keys must never reach the browser.
  */
 import "server-only";
+import { chatJson } from "./ai";
 
-const LLM_API_KEY = process.env.LLM_API_KEY;
-const LLM_BASE_URL = process.env.LLM_BASE_URL || "https://api.groq.com/openai/v1";
-const LLM_MODEL = process.env.LLM_MODEL || "openai/gpt-oss-120b";
+const SYSTEM =
+  "You are a precise technology analyst. Reply with a single JSON object that matches the requested shape exactly — no prose, no markdown fences.";
 
 export async function llmJson(
   prompt: string,
   opts?: { maxTokens?: number; timeoutMs?: number },
 ): Promise<Record<string, unknown> | null> {
-  if (!LLM_API_KEY) return null; // no key configured (e.g. preview mode) → caller falls back
-
-  // Retry on rate limits (429) — free LLM tiers cap requests/minute. Keep backoff short
-  // so a user-facing popup never spins for long; per-request timeout prevents hangs.
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const resp = await fetch(`${LLM_BASE_URL}/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${LLM_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: LLM_MODEL,
-          temperature: 0.3,
-          max_tokens: opts?.maxTokens ?? 800,
-          response_format: { type: "json_object" },
-          messages: [{ role: "user", content: prompt }],
-        }),
-        signal: AbortSignal.timeout(opts?.timeoutMs ?? 15000),
-      });
-
-      if (resp.status === 429) {
-        const wait = Number(resp.headers.get("retry-after")) || 2 ** attempt;
-        await new Promise((r) => setTimeout(r, Math.min(wait, 4) * 1000));
-        continue;
-      }
-      if (!resp.ok) return null;
-
-      const data = await resp.json();
-      const raw = data?.choices?.[0]?.message?.content;
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null; // timeout or network error — caller falls back gracefully
-    }
-  }
-  return null; // exhausted retries
+  // Returns null when no provider is configured or the call fails — callers degrade gracefully.
+  return chatJson("fast", SYSTEM, prompt, {
+    maxTokens: opts?.maxTokens ?? 800,
+    timeoutMs: opts?.timeoutMs ?? 15000,
+    temperature: 0.3,
+  });
 }

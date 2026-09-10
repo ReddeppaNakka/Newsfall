@@ -55,8 +55,37 @@ def chunked(items: Sequence[Any], size: int = 200) -> Iterable[Sequence[Any]]:
         yield items[i : i + size]
 
 
+def dedupe_by_key(rows: list[dict], on_conflict: str) -> list[dict]:
+    """Collapse rows that share the same conflict key (last one wins, order preserved).
+
+    Postgres rejects a single INSERT ... ON CONFLICT DO UPDATE that touches the same row twice
+    ("cannot affect row a second time", SQLSTATE 21000). LLM output routinely repeats a
+    relationship or watch item within one batch, so every batch is de-duplicated first.
+    """
+    keys = [k.strip() for k in on_conflict.split(",") if k.strip()]
+    seen: dict[tuple, int] = {}
+    out: list[dict] = []
+    for row in rows:
+        key = tuple(_hashable(row.get(k)) for k in keys)
+        if key in seen:
+            out[seen[key]] = row
+        else:
+            seen[key] = len(out)
+            out.append(row)
+    return out
+
+
+def _hashable(v: Any) -> Any:
+    if isinstance(v, list):
+        return tuple(_hashable(x) for x in v)
+    if isinstance(v, dict):
+        return tuple(sorted((k, _hashable(x)) for k, x in v.items()))
+    return v
+
+
 def upsert(db: Client, table: str, rows: list[dict], on_conflict: str, *, ignore_duplicates: bool = False) -> int:
     """Chunked upsert; returns number of rows sent. Never raises on an empty list."""
+    rows = dedupe_by_key(rows, on_conflict)
     if not rows:
         return 0
     n = 0
